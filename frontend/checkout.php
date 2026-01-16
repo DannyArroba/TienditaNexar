@@ -156,6 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish_purchase'])) {
     }
   }
 }
+
+$pageTitle = "Checkout";
+$backUrl = "cart_page_o_index.php"; // o a donde quieras
+$backText = "Volver";
+include("partials/header.php");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -164,15 +169,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finish_purchase'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="assets/alerts.js"></script>
 </head>
 
 <body class="bg-gray-100">
-<header class="bg-blue-600 p-4 text-white">
-  <div class="container mx-auto flex justify-between items-center">
-    <a href="index.php" class="text-xl font-bold">Mi Tienda</a>
-    <a href="purchase-history.php" class="text-sm underline">Ver Historial</a>
-  </div>
-</header>
+<?php /* header ya incluido arriba */ ?>
 
 <main class="container mx-auto p-6 md:p-10">
   <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">

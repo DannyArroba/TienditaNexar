@@ -28,6 +28,11 @@ $q = $conn->query("SELECT * FROM purchases WHERE user_id = $user_id ORDER BY cre
 if ($q) {
   while ($row = $q->fetch_assoc()) $purchases[] = $row;
 }
+
+$pageTitle = "Historial de compras";
+$backUrl = "index.php";
+$backText = "Menú";
+include("partials/header.php");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -39,12 +44,7 @@ if ($q) {
 </head>
 <body class="bg-gray-100">
 
-<header class="bg-blue-600 p-4 text-white">
-  <div class="container mx-auto flex justify-between items-center">
-    <a href="index.php" class="text-xl font-bold">Mi Tienda</a>
-    <a href="logout.php" class="bg-red-600 px-4 py-2 rounded-lg text-white">Cerrar sesión</a>
-  </div>
-</header>
+<?php /* header ya incluido arriba */ ?>
 
 <main class="container mx-auto p-6 md:p-10">
   <div class="max-w-4xl mx-auto">

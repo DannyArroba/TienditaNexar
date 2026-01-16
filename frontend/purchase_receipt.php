@@ -28,6 +28,9 @@ if ($qi) {
 function h($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
 $typeLabel = ($p['purchase_type'] === 'FACTURA') ? 'Factura / Comprobante' : 'Consumidor final';
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -68,17 +71,18 @@ $typeLabel = ($p['purchase_type'] === 'FACTURA') ? 'Factura / Comprobante' : 'Co
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6">
         <div class="flex items-start gap-4">
           <!-- ✅ Logo (opcional) -->
-          <div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-            <!-- si tienes logo ponlo así:
+          <div class="w-16 h-16 rounded-lg bg-white flex items-center justify-center overflow-hidden">
+          <img src="assets/logo.png" class="w-full h-full object-cover" alt="Logo"> 
+          <!-- si tienes logo ponlo así:
                  <img src="assets/logo.png" class="w-full h-full object-cover" alt="Logo">
                  si no, se queda el cuadrito -->
-            <span class="text-gray-400 text-xs">LOGO</span>
+            <span class="text- text-xs"></span>
           </div>
 
           <div>
-            <h1 class="text-2xl font-extrabold text-gray-900">MI TIENDA</h1>
-            <p class="text-sm text-gray-600">Dirección del local (edítame)</p>
-            <p class="text-sm text-gray-600">Tel: 000-000-000 • correo@tutienda.com</p>
+            <h1 class="text-2xl font-extrabold text-gray-900">TIENDA 3 HERMANOS</h1>
+            <p class="text-sm text-gray-600">YANUNCOCHA Y BAÑOS</p>
+            <p class="text-sm text-gray-600">Tel: 0983241223 • 3hermanossan@gmail.com</p>
           </div>
         </div>
 

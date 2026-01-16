@@ -29,6 +29,10 @@ $result = $conn->query($sql);
 // Contador carrito
 $cartCount = 0;
 foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
+
+$pageTitle = "Menú principal";
+$backUrl = null; // en index NO queremos volver
+include("partials/header.php");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -37,15 +41,14 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi Tienda</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- SweetAlert + Alerts helper -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="assets/alerts.js"></script>
 </head>
 
 <body class="bg-gray-100">
-<header class="bg-blue-600 p-4 text-white">
-  <div class="container mx-auto flex justify-between items-center">
-    <a href="index.php" class="text-xl font-bold">Mi Tienda</a>
-    <a href="logout.php" class="bg-red-600 px-4 py-2 rounded-lg text-white">Cerrar sesión</a>
-  </div>
-</header>
+<?php /* header ya incluido arriba */ ?>
 
 <main class="container mx-auto p-8">
   <!-- Acciones arriba -->
@@ -93,7 +96,7 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
                        class="p-2 rounded-lg border w-24"
                        required>
                 <button type="submit"
-                        class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-center">
+                        class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600">
                   Añadir a la Cesta
                 </button>
               </div>
@@ -149,10 +152,11 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
     </div>
 
     <div class="mt-5">
-      <a href="checkout.php"
+      <!-- Botón pagar con confirm -->
+      <button id="btnCheckout"
          class="block bg-green-600 text-white px-6 py-3 rounded-lg w-full text-center hover:bg-green-700">
         Pagar
-      </a>
+      </button>
     </div>
   </div>
 </div>
@@ -169,6 +173,8 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
   const ivaTxt = document.getElementById('ivaTxt');
   const totalTxt = document.getElementById('totalTxt');
 
+  const btnCheckout = document.getElementById('btnCheckout');
+
   function money(n){
     return "$" + (Number(n || 0)).toFixed(2);
   }
@@ -179,11 +185,41 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
     Object.keys(payload).forEach(k => formData.append(k, payload[k]));
 
     const res = await fetch('cart_api.php', { method: 'POST', body: formData });
-    return await res.json();
+
+    // Evita crash si el server devuelve texto no JSON
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      return { status: "error", message: "Respuesta inválida del servidor", raw: text };
+    }
+  }
+
+  // ✅ Detecta éxito aunque tu API no use status:"success"
+  function apiIsSuccess(r) {
+    if (!r) return false;
+    if (r.status === "error") return false;
+
+    if (r.status === "success" || r.status === "ok") return true;
+    if (r.success === true || r.ok === true) return true;
+    if (r.result === "success") return true;
+
+    // Señales de que devolvió estructura válida
+    if (typeof r.cartCount !== "undefined") return true;
+    if (typeof r.subtotal !== "undefined") return true;
+    if (typeof r.cartHtml !== "undefined") return true;
+
+    return false;
   }
 
   async function refreshCartUI() {
     const data = await cartApi('get');
+
+    if (data.status === "error") {
+      cartBody.innerHTML = `<div class="text-red-600 text-sm">${data.message || "Error cargando carrito"}</div>`;
+      return;
+    }
+
     cartBody.innerHTML = data.cartHtml || "";
     cartBadge.textContent = data.cartCount || 0;
 
@@ -191,41 +227,74 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
     ivaTxt.textContent = money(data.iva);
     totalTxt.textContent = money(data.total);
 
-    // Re-asignar eventos a botones del carrito (porque el HTML se re-renderiza)
+    // Re-asignar eventos porque el HTML se re-renderiza
     document.querySelectorAll('.cart-remove').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await cartApi('remove', { product_id: btn.dataset.id });
-        // NO cerrar modal, solo refrescar
+        const r = await cartApi('remove', { product_id: btn.dataset.id });
+
+        if (apiIsSuccess(r)) {
+          Alerts.toastInfo("Producto eliminado ✨");
+        } else {
+          Alerts.toastError(r.message || "No se pudo eliminar");
+        }
+
         await refreshCartUI();
       });
     });
 
     document.querySelectorAll('.cart-inc').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await cartApi('inc', { product_id: btn.dataset.id });
+        const r = await cartApi('inc', { product_id: btn.dataset.id });
+
+        if (apiIsSuccess(r)) {
+          Alerts.toastSuccess("Cantidad aumentada ✅");
+        } else {
+          Alerts.toastError(r.message || "No se pudo aumentar");
+        }
+
         await refreshCartUI();
       });
     });
 
     document.querySelectorAll('.cart-dec').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await cartApi('dec', { product_id: btn.dataset.id });
+        const r = await cartApi('dec', { product_id: btn.dataset.id });
+
+        if (apiIsSuccess(r)) {
+          Alerts.toastInfo("Cantidad disminuida");
+        } else {
+          Alerts.toastError(r.message || "No se pudo disminuir");
+        }
+
         await refreshCartUI();
       });
     });
   }
 
-  // Abrir / cerrar modal
+  // Abrir modal
   cartButton.addEventListener('click', async () => {
     cartModal.classList.remove('hidden');
     await refreshCartUI();
   });
 
+  // Cerrar modal
   closeCart.addEventListener('click', () => {
     cartModal.classList.add('hidden');
   });
 
-  // Agregar al carrito SIN recargar ni subir
+  // ✅ Confirm SweetAlert al pagar
+  btnCheckout.addEventListener('click', async () => {
+    const data = await cartApi('get');
+    if (!data.cartCount || Number(data.cartCount) <= 0) {
+      Alerts.modalError("Carrito vacío", "Agrega productos antes de pagar.");
+      return;
+    }
+    Alerts.confirmCheckout(() => {
+      window.location.href = "checkout.php";
+    });
+  });
+
+  // Agregar al carrito SIN recargar
   document.querySelectorAll('.addToCartForm').forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -233,13 +302,28 @@ foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
       const productId = form.dataset.id;
       const qty = form.querySelector('input[name="quantity"]').value || 1;
 
-      await cartApi('add', { product_id: productId, quantity: qty });
+      const r = await cartApi('add', { product_id: productId, quantity: qty });
 
-      // Actualiza badge sin mover pantalla
+      if (apiIsSuccess(r)) {
+        Alerts.toastSuccess("Producto agregado al carrito ✅");
+      } else {
+        Alerts.toastError(r.message || "No se pudo agregar");
+      }
+
+      // actualizar badge sin mover pantalla
       const data = await cartApi('get');
       cartBadge.textContent = data.cartCount || 0;
     });
   });
+
+  // ✅ Toast login exitoso (si vienes de login.php -> index.php?ok=login)
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("ok") === "login") {
+      Alerts.toastSuccess("Inicio de sesión exitoso ✅");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  })();
 </script>
 
 </body>
