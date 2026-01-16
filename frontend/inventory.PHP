@@ -153,9 +153,12 @@ if (isset($_POST['edit_product'])) {
                     <h3 class="text-xl font-semibold text-gray-700"><?php echo $row['name']; ?></h3>
                     <p class="text-lg text-gray-500">$<?php echo $row['price']; ?></p>
                     <p class="text-sm text-gray-400"><?php echo $row['category']; ?></p>
-                    <div class="mt-4">
-                        <a href="edit-product.php?id=<?php echo $row['id']; ?>" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg text-center">Editar Producto</a>
-                        <a href="?delete_id=<?php echo $row['id']; ?>" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg text-center mt-2">Eliminar Producto</a>
+                    <div class="mt-4 flex justify-between">
+                        <!-- Botón Editar -->
+                        <a href="edit-product.php?id=<?php echo $row['id']; ?>" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Editar</a>
+
+                        <!-- Botón Eliminar -->
+                        <a href="?delete_id=<?php echo $row['id']; ?>" class="bg-red-600 text-white px-4 py-2 rounded-lg">Eliminar</a>
                     </div>
                 </div>
             </div>

@@ -5,7 +5,7 @@ body {
   background-color: #f0f0f0;
 }
 
-h2 {
+h2, h3 {
   text-align: center;
 }
 
@@ -25,13 +25,14 @@ button:hover {
 input, textarea {
   padding: 10px;
   margin: 10px;
-  width: 200px;
+  width: 100%;
 }
 
 .product-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Hacemos la cuadrícula más flexible */
+  gap: 1rem; /* Espacio entre los productos */
+  justify-items: center; /* Centra los productos */
 }
 
 .product-item {
@@ -40,10 +41,16 @@ input, textarea {
   margin: 10px;
   border: 1px solid #ddd;
   text-align: center;
-  width: 200px;
+  width: 100%;
+  max-width: 200px; /* Máximo tamaño para que no se estiren mucho */
 }
 
 .product-item img {
   max-width: 100%;
   height: auto;
+}
+
+.product-item:hover {
+  transform: scale(1.05); /* Efecto de hover para interacción */
+  transition: transform 0.3s ease-in-out;
 }

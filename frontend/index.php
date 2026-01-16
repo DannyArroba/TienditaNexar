@@ -2,77 +2,245 @@
 session_start();
 include('../backend/db.php');
 
-// Verificar si el usuario está logueado
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php"); // Si no está autenticado, redirige al login
+    header("Location: login.php");
     exit();
 }
 
-// Obtener productos desde la base de datos
-$sql = "SELECT * FROM products";
-$result = $conn->query($sql);
-?>
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
 
+// Categorías
+$category_sql = "SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> ''";
+$category_result = $conn->query($category_sql);
+
+// Filtro (por defecto: todos)
+$selectedCategory = $_GET['category'] ?? 'todas';
+
+if ($selectedCategory !== 'todas') {
+    $safeCat = $conn->real_escape_string($selectedCategory);
+    $sql = "SELECT * FROM products WHERE category = '$safeCat'";
+} else {
+    $sql = "SELECT * FROM products";
+}
+$result = $conn->query($sql);
+
+// Contador carrito
+$cartCount = 0;
+foreach ($_SESSION['cart'] as $it) $cartCount += (int)$it['quantity'];
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenido a la Tienda</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Tienda</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.2/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
 
-<!-- Header con botones de navegación -->
+<body class="bg-gray-100">
 <header class="bg-blue-600 p-4 text-white">
-    <div class="container mx-auto flex justify-between items-center">
-        <div class="flex space-x-4">
-            <a href="index.php" class="text-xl font-bold">Mi Tienda</a>
-            <a href="inventory.php" class="text-lg">Ver Inventario</a> <!-- Nuevo botón para ver inventario -->
-        </div>
-        <div>
-            <a href="logout.php" class="bg-red-600 px-4 py-2 rounded-lg text-white">Cerrar sesión</a>
-        </div>
-    </div>
+  <div class="container mx-auto flex justify-between items-center">
+    <a href="index.php" class="text-xl font-bold">Mi Tienda</a>
+    <a href="logout.php" class="bg-red-600 px-4 py-2 rounded-lg text-white">Cerrar sesión</a>
+  </div>
 </header>
 
-<!-- Main content -->
 <main class="container mx-auto p-8">
-    <!-- Botones en el centro de la pantalla -->
-    <div class="flex justify-center space-x-4 mb-8">
-        <button class="bg-blue-500 text-white px-6 py-3 rounded-lg">Administrar Productos</button>
-        <button class="bg-green-500 text-white px-6 py-3 rounded-lg">Ver Pedidos</button>
-    </div>
+  <!-- Acciones arriba -->
+  <div class="text-center mb-8">
+    <a href="inventory.php" class="bg-blue-600 text-white px-6 py-3 rounded-lg mx-2 inline-block">Administrar Productos</a>
+    <a href="purchase-history.php" class="bg-green-600 text-white px-6 py-3 rounded-lg mx-2 inline-block">Historial de Compras</a>
+  </div>
 
-    <!-- Titulo -->
-    <h2 class="text-3xl text-center mb-6 font-semibold">Productos Disponibles</h2>
+  <h2 class="text-3xl text-center mb-6 font-semibold">Productos Disponibles</h2>
 
-    <!-- Filtro de categorías (puedes agregar un filtro aquí si es necesario) -->
-    <div class="mb-8 text-center">
-        <select class="p-3 rounded-lg border">
-            <option value="">Filtrar por categoría</option>
-            <option value="categoria1">Categoría 1</option>
-            <option value="categoria2">Categoría 2</option>
-        </select>
-    </div>
+  <!-- Filtro categorías -->
+  <div class="mb-8 text-center">
+    <select class="p-3 rounded-lg border"
+            onchange="window.location.href=this.value;">
+      <option value="index.php?category=todas" <?php echo ($selectedCategory==='todas')?'selected':''; ?>>Todas</option>
+      <?php if($category_result): ?>
+        <?php while ($cat = $category_result->fetch_assoc()): ?>
+          <?php $c = $cat['category']; ?>
+          <option value="index.php?category=<?php echo htmlspecialchars($c); ?>"
+            <?php echo ($selectedCategory===$c)?'selected':''; ?>>
+            <?php echo htmlspecialchars($c); ?>
+          </option>
+        <?php endwhile; ?>
+      <?php endif; ?>
+    </select>
+  </div>
 
-    <!-- Productos -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <?php while ($row = $result->fetch_assoc()) { ?>
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <img src="../frontend/uploads/<?php echo $row['image']; ?>" alt="<?php echo $row['name']; ?>" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h3 class="text-xl font-semibold text-gray-700"><?php echo $row['name']; ?></h3>
-                    <p class="text-lg text-gray-500">$<?php echo $row['price']; ?></p>
-                    <div class="mt-4">
-                        <a href="edit-product.php?id=<?php echo $row['id']; ?>" class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg text-center">Editar Producto</a>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-    </div>
+  <!-- Productos -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <?php while ($row = $result->fetch_assoc()): ?>
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <img src="../frontend/uploads/<?php echo htmlspecialchars($row['image']); ?>"
+             alt="<?php echo htmlspecialchars($row['name']); ?>"
+             class="w-full h-48 object-cover">
+
+        <div class="p-4">
+          <h3 class="text-xl font-semibold text-gray-700"><?php echo htmlspecialchars($row['name']); ?></h3>
+          <p class="text-lg text-gray-500">$<?php echo htmlspecialchars($row['price']); ?></p>
+          <p class="text-sm text-gray-400"><?php echo htmlspecialchars($row['category']); ?></p>
+
+          <div class="mt-4">
+            <form class="addToCartForm" data-id="<?php echo (int)$row['id']; ?>">
+              <div class="flex items-center gap-2">
+                <input type="number" name="quantity" min="1" value="1"
+                       class="p-2 rounded-lg border w-24"
+                       required>
+                <button type="submit"
+                        class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg text-center">
+                  Añadir a la Cesta
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    <?php endwhile; ?>
+  </div>
 </main>
+
+<!-- Botón flotante carrito -->
+<div class="fixed bottom-8 right-8 z-50">
+  <button id="cartButton"
+          class="relative bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700">
+    <span class="text-2xl">🛒</span>
+    <span id="cartBadge"
+          class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full px-2 py-1">
+      <?php echo (int)$cartCount; ?>
+    </span>
+  </button>
+</div>
+
+<!-- Modal carrito -->
+<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden">
+  <div class="bg-white p-6 rounded-lg w-[92%] max-w-lg">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold">Tu Carrito</h2>
+      <button id="closeCart"
+              class="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-600">✕</button>
+    </div>
+
+    <!-- contenido carrito -->
+    <div id="cartBody" class="mb-4">
+      <div class="text-gray-500 text-sm">Cargando...</div>
+    </div>
+
+    <!-- Totales -->
+    <div class="border-t pt-4 space-y-2 text-sm">
+      <div class="flex justify-between">
+        <span class="text-gray-600">Total sin IVA</span>
+        <span id="subtotalTxt" class="font-semibold text-gray-800">$0.00</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">IVA (12%)</span>
+        <span id="ivaTxt" class="font-semibold text-gray-800">$0.00</span>
+      </div>
+      <div class="flex justify-between text-base">
+        <span class="text-gray-800 font-bold">Total con IVA</span>
+        <span id="totalTxt" class="font-bold text-gray-900">$0.00</span>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <a href="checkout.php"
+         class="block bg-green-600 text-white px-6 py-3 rounded-lg w-full text-center hover:bg-green-700">
+        Pagar
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cartModal = document.getElementById('cartModal');
+  const cartButton = document.getElementById('cartButton');
+  const closeCart = document.getElementById('closeCart');
+
+  const cartBody = document.getElementById('cartBody');
+  const cartBadge = document.getElementById('cartBadge');
+
+  const subtotalTxt = document.getElementById('subtotalTxt');
+  const ivaTxt = document.getElementById('ivaTxt');
+  const totalTxt = document.getElementById('totalTxt');
+
+  function money(n){
+    return "$" + (Number(n || 0)).toFixed(2);
+  }
+
+  async function cartApi(action, payload = {}) {
+    const formData = new FormData();
+    formData.append('action', action);
+    Object.keys(payload).forEach(k => formData.append(k, payload[k]));
+
+    const res = await fetch('cart_api.php', { method: 'POST', body: formData });
+    return await res.json();
+  }
+
+  async function refreshCartUI() {
+    const data = await cartApi('get');
+    cartBody.innerHTML = data.cartHtml || "";
+    cartBadge.textContent = data.cartCount || 0;
+
+    subtotalTxt.textContent = money(data.subtotal);
+    ivaTxt.textContent = money(data.iva);
+    totalTxt.textContent = money(data.total);
+
+    // Re-asignar eventos a botones del carrito (porque el HTML se re-renderiza)
+    document.querySelectorAll('.cart-remove').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await cartApi('remove', { product_id: btn.dataset.id });
+        // NO cerrar modal, solo refrescar
+        await refreshCartUI();
+      });
+    });
+
+    document.querySelectorAll('.cart-inc').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await cartApi('inc', { product_id: btn.dataset.id });
+        await refreshCartUI();
+      });
+    });
+
+    document.querySelectorAll('.cart-dec').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await cartApi('dec', { product_id: btn.dataset.id });
+        await refreshCartUI();
+      });
+    });
+  }
+
+  // Abrir / cerrar modal
+  cartButton.addEventListener('click', async () => {
+    cartModal.classList.remove('hidden');
+    await refreshCartUI();
+  });
+
+  closeCart.addEventListener('click', () => {
+    cartModal.classList.add('hidden');
+  });
+
+  // Agregar al carrito SIN recargar ni subir
+  document.querySelectorAll('.addToCartForm').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const productId = form.dataset.id;
+      const qty = form.querySelector('input[name="quantity"]').value || 1;
+
+      await cartApi('add', { product_id: productId, quantity: qty });
+
+      // Actualiza badge sin mover pantalla
+      const data = await cartApi('get');
+      cartBadge.textContent = data.cartCount || 0;
+    });
+  });
+</script>
 
 </body>
 </html>
