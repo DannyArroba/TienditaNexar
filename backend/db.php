@@ -1,5 +1,5 @@
 <?php
-$host = 'localhost:3309'; // Cambia esto si tu base de datos está en otro servidor
+$host = 'localhost'; // Cambia esto si tu base de datos está en otro servidor
 $user = 'root';      // Usuario de la base de datos
 $password = '';      // Contraseña de la base de datos
 $dbname = 'tienda';  // Nombre de la base de datos
