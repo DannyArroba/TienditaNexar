@@ -11,6 +11,10 @@ import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import Support from './pages/Support';
+import Help from './pages/Help';
+import Terms from './pages/Terms';
+import Transactions from './pages/Transactions';
 import { useAuth } from './context/AuthContext';
 
 function AppContent() {
@@ -36,7 +40,11 @@ function AppContent() {
           <Route path="/sales" element={user ? <Sales /> : <Navigate to="/login" />} />
           <Route path="/inventory" element={user ? <Inventory /> : <Navigate to="/login" />} />
           <Route path="/users" element={user?.role === 'admin' ? <Users /> : <Navigate to="/dashboard" />} />
+          <Route path="/transactions" element={user ? <Transactions /> : <Navigate to="/login" />} />
           <Route path="/checkout" element={user ? <Checkout /> : <Navigate to="/login" />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

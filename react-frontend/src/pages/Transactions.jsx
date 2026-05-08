@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardApi, transactionsApi } from '../api';
-import { TrendingUp, Package, AlertTriangle, Clock, DollarSign, ArrowRight, Users as UsersIcon, Receipt, X, Calendar, CreditCard, ShoppingBag, Download } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { transactionsApi } from '../api';
+import { Clock, Search, Eye, X, Receipt, ShoppingBag, User, Calendar, CreditCard, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const Dashboard = () => {
-  const [data, setData] = useState(null);
+const Transactions = () => {
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [details, setDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
-    fetchStats();
+    fetchTransactions();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchTransactions = async () => {
+    setLoading(true);
     try {
-      const res = await dashboardApi.getStats();
+      const res = await transactionsApi.getAll();
       if (res.data.status === 'success') {
-        setData(res.data);
+        setTransactions(res.data.data);
       }
     } catch (err) {
       console.error(err);
@@ -124,126 +125,92 @@ const Dashboard = () => {
     doc.save(`Comprobante_3Hermanos_${purchase.id}.pdf`);
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-    </div>
+  const filteredTransactions = transactions.filter(t => 
+    t.id.toString().includes(search) || 
+    t.purchase_type.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Panel Administrativo</h1>
-        <p className="text-sm text-gray-500 font-medium mt-1">Monitorea el rendimiento de tu supermercado en tiempo real.</p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <motion.div 
-          whileHover={{ y: -3 }}
-          className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex items-center gap-5 relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-bl-[4rem] -z-0 transition-transform group-hover:scale-110 duration-500"></div>
-          <div className="p-4 bg-green-600 text-white rounded-2xl relative z-10 shadow-lg shadow-green-100">
-            <DollarSign className="h-6 w-6" />
-          </div>
-          <div className="relative z-10">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Ventas Hoy</p>
-            <p className="text-2xl font-black text-gray-900 tracking-tighter">${parseFloat(data.stats.salesToday).toFixed(2)}</p>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          whileHover={{ y: -3 }}
-          className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex items-center gap-5 relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50 rounded-bl-[4rem] -z-0 transition-transform group-hover:scale-110 duration-500"></div>
-          <div className="p-4 bg-blue-600 text-white rounded-2xl relative z-10 shadow-lg shadow-blue-100">
-            <Package className="h-6 w-6" />
-          </div>
-          <div className="relative z-10">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Productos</p>
-            <p className="text-2xl font-black text-gray-900 tracking-tighter">{data.stats.totalProducts}</p>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          whileHover={{ y: -3 }}
-          className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex items-center gap-5 relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-red-50 rounded-bl-[4rem] -z-0 transition-transform group-hover:scale-110 duration-500"></div>
-          <div className="p-4 bg-red-500 text-white rounded-2xl relative z-10 shadow-lg shadow-red-100">
-            <AlertTriangle className="h-6 w-6" />
-          </div>
-          <Link to="/inventory" className="relative z-10 hover:opacity-80 transition-opacity text-left">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Bajo Stock</p>
-            <p className="text-2xl font-black text-gray-900 tracking-tighter">{data.stats.lowStockCount}</p>
-          </Link>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Sales */}
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col max-h-[500px]">
-          <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50 shrink-0">
-            <h2 className="text-xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
-              <Clock className="h-5 w-5 text-primary-600" />
-              Últimas Transacciones
-            </h2>
-          </div>
-          <div className="divide-y divide-gray-50 overflow-y-auto custom-scrollbar">
-            {data.recentSales.map((sale) => (
-              <div 
-                key={sale.id} 
-                onClick={() => fetchDetails(sale.id)}
-                className="p-6 flex justify-between items-center hover:bg-gray-50/80 transition-all group cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-black text-[10px] text-gray-400 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
-                    #{sale.id}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-base tracking-tight">Orden de Venta</p>
-                    <p className="text-[10px] text-gray-400 font-medium">{new Date(sale.created_at).toLocaleString()}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-primary-600 text-lg tracking-tighter">${parseFloat(sale.total).toFixed(2)}</p>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[8px] font-black uppercase rounded-lg tracking-widest">{sale.purchase_type}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Historial de Transacciones</h1>
+          <p className="text-sm text-gray-500 font-medium">Consulta y detalla todas las ventas realizadas.</p>
         </div>
-
-        {/* Quick Actions */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-black text-gray-900 tracking-tight">Accesos Directos</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Link to="/inventory" className="p-6 bg-primary-600 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(22,163,74,0.3)] flex flex-col justify-between h-44 group hover:scale-[1.02] transition-all duration-500 relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-              <Package className="h-8 w-8 opacity-40 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <p className="font-black text-xl tracking-tight mb-1">Inventario</p>
-                <p className="text-xs text-primary-100 font-medium">Control total de stock</p>
-              </div>
-            </Link>
-            <Link to="/users" className="p-6 bg-gray-900 text-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex flex-col justify-between h-44 group hover:scale-[1.02] transition-all duration-500 relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-              <UsersIcon className="h-8 w-8 opacity-40 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <p className="font-black text-xl tracking-tight mb-1">Personal</p>
-                <p className="text-xs text-gray-400 font-medium">Gestionar equipo</p>
-              </div>
-            </Link>
-          </div>
+        
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar por ID o tipo..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium text-sm shadow-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha y Hora</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tipo</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredTransactions.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <span className="font-black text-gray-400 text-xs">#{t.id}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 text-sm">{new Date(t.created_at).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase">{new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                        t.purchase_type === 'FACTURA' 
+                          ? 'bg-blue-50 text-blue-600' 
+                          : 'bg-green-50 text-green-600'
+                      }`}>
+                        {t.purchase_type.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-black text-gray-900 text-base tracking-tighter">${parseFloat(t.total).toFixed(2)}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => fetchDetails(t.id)}
+                        className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Detail Modal */}
       <AnimatePresence>
         {selectedTransaction && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -391,4 +358,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Transactions;

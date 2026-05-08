@@ -46,6 +46,7 @@ export const checkoutApi = {
 
 export const dashboardApi = {
   getStats: () => api.get('/dashboard.php'),
+  getPublicStats: () => api.get('/public_stats.php'),
 };
 
 export const usersApi = {
@@ -53,6 +54,11 @@ export const usersApi = {
   add: (data) => api.post('/users.php', { action: 'add', ...data }),
   update: (data) => api.post('/users.php', { action: 'update', ...data }),
   delete: (id) => api.post('/users.php', { action: 'delete', id }),
+};
+
+export const transactionsApi = {
+  getAll: () => api.get('/transactions.php?action=list'),
+  getDetails: (id) => api.get(`/transactions.php?action=details&id=${id}`),
 };
 
 export default api;

@@ -105,67 +105,67 @@ const Users = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex justify-between items-center mb-12">
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-500 mt-1">Administra los accesos de trabajadores y administradores</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Gestión de Usuarios</h1>
+          <p className="text-sm text-gray-500 font-medium mt-1">Administra los accesos de trabajadores y administradores</p>
         </div>
         <button
           onClick={() => { setEditingUser(null); setIsModalOpen(true); }}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary-100"
+          className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-primary-100"
         >
-          <UserPlus className="h-5 w-5" />
+          <UserPlus className="h-4 w-4" />
           Nuevo Usuario
         </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+          <Loader2 className="h-10 w-10 animate-spin text-primary-600" />
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Usuario / Email</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Rol</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha Registro</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Usuario / Email</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Rol</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha Registro</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold ${user.role === 'admin' ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'}`}>
+                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center font-bold text-sm ${user.role === 'admin' ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'}`}>
                         {user.email.charAt(0).toUpperCase()}
                       </div>
-                      <span className="font-semibold text-gray-900">{user.email}</span>
+                      <span className="font-bold text-gray-900 text-sm">{user.email}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-3">
                     <div className="flex items-center gap-2">
                       {user.role === 'admin' ? (
-                        <span className="px-3 py-1 bg-primary-100 text-primary-700 text-[10px] font-black uppercase rounded-full flex items-center gap-1">
+                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-[9px] font-black uppercase rounded-lg flex items-center gap-1">
                           <Shield className="h-3 w-3" />
                           Administrador
                         </span>
                       ) : (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase rounded-full flex items-center gap-1">
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[9px] font-black uppercase rounded-lg flex items-center gap-1">
                           <User className="h-3 w-3" />
                           Trabajador
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-6 py-3 text-xs font-bold text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => { setEditingUser(user); setIsModalOpen(true); }}
                         className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"

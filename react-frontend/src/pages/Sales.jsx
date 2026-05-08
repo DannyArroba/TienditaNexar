@@ -14,57 +14,76 @@ const ProductCard = ({ product, addToCart, getItemCountInCart }) => {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className={`group bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col ${outOfStock ? 'opacity-60 grayscale' : ''}`}
+      whileHover={{ y: -8 }}
+      className={`group bg-white rounded-[2rem] border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(22,163,74,0.15)] transition-all duration-500 overflow-hidden flex flex-col relative ${outOfStock ? 'opacity-75 grayscale' : ''}`}
     >
-      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+      {/* Badge de Oferta o Nuevo (Simulado) */}
+      {!outOfStock && (
+        <div className="absolute top-4 left-4 z-20">
+          <span className="bg-yellow-400 text-yellow-900 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm">Destacado</span>
+        </div>
+      )}
+
+      <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden">
         <img
           src={product.image_url}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
+        
+        {/* Overlay de acción rápida al hover */}
+        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
         {inCartCount > 0 && (
-          <div className="absolute top-3 right-3 bg-primary-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-black shadow-lg border-2 border-white animate-in zoom-in">
+          <div className="absolute top-4 right-4 bg-primary-600 text-white w-10 h-10 rounded-2xl flex items-center justify-center font-black shadow-[0_10px_20px_rgba(22,163,74,0.4)] border-2 border-white animate-in zoom-in z-20">
             {inCartCount}
           </div>
         )}
+        
         {outOfStock && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <span className="bg-red-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Agotado</span>
+          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+            <span className="bg-white text-gray-900 px-6 py-2 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl">Agotado</span>
           </div>
         )}
       </div>
-      <div className="p-5 flex-1 flex flex-col">
+
+      <div className="p-4 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-2">
-          <span className="text-[10px] font-black text-primary-600 uppercase tracking-wider bg-primary-50 px-2 py-0.5 rounded-md">
+          <span className="text-[9px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-2 py-0.5 rounded-lg">
             {product.category}
           </span>
-          <div className="flex items-center gap-1 text-gray-400">
-            <Package className="h-3 w-3" />
-            <span className="text-[10px] font-bold">{product.stock}</span>
+          <div className="flex items-center gap-1 text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-md">
+            <Package className="h-2.5 w-2.5" />
+            <span className="text-[9px] font-bold">{product.stock}</span>
           </div>
         </div>
-        <h3 className="font-bold text-gray-900 line-clamp-1 mb-4">{product.name}</h3>
+        
+        <h3 className="text-base font-bold text-gray-900 line-clamp-1 mb-3 group-hover:text-primary-600 transition-colors">{product.name}</h3>
         
         <div className="mt-auto space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xl font-black text-gray-900">${parseFloat(product.price).toFixed(2)}</span>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-gray-400 uppercase">Precio</span>
+              <span className="text-xl font-black text-gray-900 tracking-tighter">${parseFloat(product.price).toFixed(2)}</span>
+            </div>
+            
             {!outOfStock && (
-              <div className="flex items-center border border-gray-200 rounded-xl bg-gray-50 overflow-hidden scale-90">
+              <div className="flex items-center bg-gray-100 p-0.5 rounded-xl">
                 <button
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="p-2 hover:bg-gray-100 text-gray-500 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary-600 text-gray-500 transition-all shadow-none hover:shadow-sm"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-2.5 w-2.5" />
                 </button>
-                <span className="w-8 text-center text-xs font-black text-gray-700">{quantity}</span>
+                <span className="w-6 text-center text-[10px] font-black text-gray-700">{quantity}</span>
                 <button
                   onClick={() => setQuantity(q => q + 1)}
-                  className="p-2 hover:bg-gray-100 text-gray-500 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white hover:text-primary-600 text-gray-500 transition-all shadow-none hover:shadow-sm"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2.5 w-2.5" />
                 </button>
               </div>
             )}
@@ -73,20 +92,20 @@ const ProductCard = ({ product, addToCart, getItemCountInCart }) => {
           <button
             onClick={() => !outOfStock && addToCart(product, quantity)}
             disabled={outOfStock}
-            className={`w-full py-3 rounded-2xl transition-all active:scale-95 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 ${
+            className={`w-full py-3 rounded-xl transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-2 shadow-sm ${
               inCartCount > 0 
-                ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' 
-                : 'bg-gray-900 text-white hover:bg-primary-600'
+                ? 'bg-primary-600 text-white shadow-[0_15px_30px_rgba(22,163,74,0.2)]' 
+                : 'bg-gray-900 text-white hover:bg-primary-600 hover:shadow-[0_15px_30px_rgba(22,163,74,0.2)]'
             }`}
           >
             {inCartCount > 0 ? (
               <>
-                <Check className="h-4 w-4" />
+                <Check className="h-3.5 w-3.5" />
                 Añadido ({inCartCount})
               </>
             ) : (
               <>
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-3.5 w-3.5" />
                 Añadir a venta
               </>
             )}
@@ -162,46 +181,39 @@ const Sales = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 pb-32">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+    <div className="max-w-7xl mx-auto px-4 py-6 pb-24">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tighter">Punto de Venta</h1>
-          <p className="text-gray-500 font-medium">Selecciona los productos para la venta actual</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Punto de Venta</h1>
+          <p className="text-sm text-gray-500 font-medium">Selecciona los productos para la venta actual</p>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm mb-8 flex flex-col md:flex-row gap-4 sticky top-20 z-30">
+      <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row gap-3 sticky top-16 z-30">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder="Buscar por nombre de producto..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-          <Filter className="h-5 w-5 text-gray-400 shrink-0 ml-2" />
-          <button
-            onClick={() => setSelectedCategory('todas')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-              selectedCategory === 'todas'
-                ? 'bg-primary-600 text-white shadow-lg shadow-primary-100'
-                : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            Todas
-          </button>
-          {categories.map((cat) => (
+        
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+          <div className="p-2 bg-gray-50 rounded-lg text-gray-400">
+            <Filter className="h-4 w-4" />
+          </div>
+          {['todas', ...categories].map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                selectedCategory === cat
-                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-100'
-                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                selectedCategory === cat 
+                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-200' 
+                  : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
               }`}
             >
               {cat}
@@ -215,7 +227,7 @@ const Sales = () => {
           <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           <AnimatePresence>
             {filteredProducts.map((product) => (
               <ProductCard 

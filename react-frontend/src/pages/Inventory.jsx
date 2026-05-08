@@ -138,64 +138,64 @@ const Inventory = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex justify-between items-center mb-12">
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Panel de Control - Alimentos</h1>
-          <p className="text-gray-500 mt-1">Administra el stock de productos frescos y abarrotes</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Panel de Control - Alimentos</h1>
+          <p className="text-sm text-gray-500 font-medium mt-1">Administra el stock de productos frescos y abarrotes</p>
         </div>
         <button
           onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary-100"
+          className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-primary-100"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4" />
           Nuevo Producto
         </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
+          <Loader2 className="h-10 w-10 animate-spin text-primary-600" />
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Producto</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Categoría</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Precio</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Acciones</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Stock</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {products.map((product) => (
                 <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-gray-100 overflow-hidden border border-gray-100">
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-100">
                         <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
                       </div>
-                      <span className="font-semibold text-gray-900">{product.name}</span>
+                      <span className="font-bold text-gray-900 text-sm">{product.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">
+                  <td className="px-6 py-3">
+                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-black uppercase rounded-lg">
                       {product.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-bold text-gray-900">
+                  <td className="px-6 py-3 font-black text-gray-900 text-sm">
                     ${parseFloat(product.price).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-3">
                     <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-gray-400" />
-                      <span className="font-medium">{product.stock}</span>
+                      <Package className="h-3.5 w-3.5 text-gray-400" />
+                      <span className="font-bold text-sm">{product.stock}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => { setPurchaseProduct(product); setIsPurchaseModalOpen(true); }}
                         className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
