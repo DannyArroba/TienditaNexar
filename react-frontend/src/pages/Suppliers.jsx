@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { customersApi } from '../api';
+import { suppliersApi } from '../api';
 import {
   Edit2,
   Loader2,
@@ -9,78 +9,75 @@ import {
   Plus,
   Search,
   Trash2,
+  Building2,
   UserRound,
   X,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const emptyCustomer = {
-  name: '',
-  id_number: '',
+const emptySupplier = {
+  company_name: '',
+  contact_name: '',
   email: '',
+  ruc: '',
   phone: '',
   address: '',
 };
 
-const Customers = () => {
-  const [customers, setCustomers] = useState([]);
+const Suppliers = () => {
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editingSupplier, setEditingSupplier] = useState(null);
 
-  const fetchCustomers = async () => {
+  const fetchSuppliers = async () => {
     setLoading(true);
     try {
-      const response = await customersApi.getAll();
-      if (response.data.status === 'success') {
-        setCustomers(response.data.data);
-      }
+      const response = await suppliersApi.getAll();
+      setSuppliers(response.data);
     } catch (error) {
-      Swal.fire('Error', 'No se pudo cargar la lista de clientes', 'error');
+      Swal.fire('Error', 'No se pudo cargar la lista de proveedores', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCustomers();
+    fetchSuppliers();
   }, []);
 
-  const filteredCustomers = useMemo(() => {
+  const filteredSuppliers = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return customers;
-    return customers.filter((customer) =>
-      [customer.name, customer.id_number, customer.phone, customer.email]
+    if (!term) return suppliers;
+    return suppliers.filter((supplier) =>
+      [supplier.company_name, supplier.contact_name, supplier.ruc, supplier.phone, supplier.email]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term))
     );
-  }, [customers, search]);
+  }, [suppliers, search]);
 
-  const openForm = (customer = null) => {
-    setEditingCustomer(customer);
+  const openForm = (supplier = null) => {
+    setEditingSupplier(supplier);
     setIsFormOpen(true);
   };
 
   const handleSave = async (event) => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(event.currentTarget).entries());
-
-    if (!/^22\d{8}$/.test(data.id_number)) {
-      Swal.fire('Cedula invalida', 'Debe iniciar con 22 y contener 10 digitos', 'error');
-      return;
-    }
-    if (!/^09\d{8}$/.test(data.phone)) {
-      Swal.fire('Celular invalido', 'Debe iniciar con 09 y contener 10 digitos', 'error');
-      return;
-    }
-
+    const formData = new FormData(event.currentTarget);
+    
     setSaving(true);
     try {
-      const response = editingCustomer
-        ? await customersApi.update({ id: editingCustomer.id, ...data })
-        : await customersApi.add(data);
+      let response;
+      if (editingSupplier) {
+        formData.append('action', 'update');
+        formData.append('id', editingSupplier.id);
+        response = await suppliersApi.update(formData);
+      } else {
+        formData.append('action', 'add');
+        response = await suppliersApi.add(formData);
+      }
 
       if (response.data.status !== 'success') {
         Swal.fire('Error', response.data.message, 'error');
@@ -88,20 +85,20 @@ const Customers = () => {
       }
 
       setIsFormOpen(false);
-      setEditingCustomer(null);
-      await fetchCustomers();
+      setEditingSupplier(null);
+      await fetchSuppliers();
       Swal.fire('Listo', response.data.message, 'success');
     } catch (error) {
-      Swal.fire('Error', error.response?.data?.message || 'No se pudo guardar el cliente', 'error');
+      Swal.fire('Error', error.response?.data?.message || 'No se pudo guardar el proveedor', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (customer) => {
+  const handleDelete = async (supplier) => {
     const result = await Swal.fire({
-      title: 'Eliminar cliente',
-      text: `Se eliminara a ${customer.name}`,
+      title: 'Eliminar proveedor',
+      text: `Se eliminará a ${supplier.company_name}`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
@@ -110,9 +107,12 @@ const Customers = () => {
     });
     if (!result.isConfirmed) return;
 
-    const response = await customersApi.delete(customer.id);
+    const formData = new FormData();
+    formData.append('action', 'delete');
+    formData.append('id', supplier.id);
+    const response = await suppliersApi.delete(formData);
     if (response.data.status === 'success') {
-      setCustomers((current) => current.filter((item) => item.id !== customer.id));
+      setSuppliers((current) => current.filter((item) => item.id !== supplier.id));
       Swal.fire('Eliminado', response.data.message, 'success');
     } else {
       Swal.fire('No se pudo eliminar', response.data.message, 'error');
@@ -123,15 +123,15 @@ const Customers = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">Gestion de Clientes</h1>
-          <p className="text-sm text-gray-500 mt-1">Administra los datos principales de los clientes</p>
+          <h1 className="text-2xl font-black text-gray-900">Gestion de Proveedores</h1>
+          <p className="text-sm text-gray-500 mt-1">Administra los datos de tus proveedores</p>
         </div>
         <button
           onClick={() => openForm()}
           className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 shadow-lg shadow-primary-100"
         >
           <Plus className="h-4 w-4" />
-          Nuevo cliente
+          Nuevo proveedor
         </button>
       </div>
 
@@ -140,7 +140,7 @@ const Customers = () => {
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por nombre, cedula o celular"
+          placeholder="Buscar por empresa, contacto, RUC o celular"
           className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
@@ -155,51 +155,50 @@ const Customers = () => {
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">Cliente</th>
+                  <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">Proveedor</th>
+                  <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">Contacto</th>
+                  <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">RUC</th>
                   <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">Telefono</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">Correo</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase">Direccion</th>
                   <th className="px-5 py-4 text-right text-[10px] font-black text-gray-400 uppercase">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50">
+                {filteredSuppliers.map((supplier) => (
+                  <tr key={supplier.id} className="hover:bg-gray-50">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-primary-50 text-primary-700 rounded-lg flex items-center justify-center">
-                          <UserRound className="h-5 w-5" />
+                          <Building2 className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="font-bold text-sm text-gray-900">{customer.name}</p>
-                          <p className="text-xs text-gray-500">CI {customer.id_number}</p>
+                          <p className="font-bold text-sm text-gray-900">{supplier.company_name}</p>
+                          <p className="text-xs text-gray-500">{supplier.email || 'Sin correo'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
-                        <Phone className="h-4 w-4 text-gray-400" />
-                        {customer.phone}
+                        <UserRound className="h-4 w-4 text-gray-400" />
+                        {supplier.contact_name || 'Sin contacto'}
                       </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        {customer.email || 'Sin correo'}
+                        {supplier.ruc || 'Sin RUC'}
                       </div>
                     </td>
-                    <td className="px-5 py-4 max-w-xs">
-                      <div className="flex items-start gap-2 text-xs text-gray-600">
-                        <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                        <span>{customer.address}</span>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        {supplier.phone || 'Sin teléfono'}
                       </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-1">
-                        <button onClick={() => openForm(customer)} title="Editar" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                        <button onClick={() => openForm(supplier)} title="Editar" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
                           <Edit2 className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDelete(customer)} title="Eliminar" className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                        <button onClick={() => handleDelete(supplier)} title="Eliminar" className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -215,25 +214,25 @@ const Customers = () => {
       {isFormOpen && (
         <div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="px-4 md:px-6 py-4 md:py-5 border-b flex items-center justify-between bg-gray-50 shrink-0">
-              <h2 className="font-black text-lg">{editingCustomer ? 'Editar cliente' : 'Registrar cliente'}</h2>
+            <div className="px-4 md:px-6 py-4 md:py-5 border-b flex justify-between items-center bg-gray-50 shrink-0">
+              <h2 className="font-black text-lg">{editingSupplier ? 'Editar proveedor' : 'Registrar proveedor'}</h2>
               <button onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-gray-200 rounded-lg"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleSave} className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
               {Object.entries({
-                name: ['Nombre completo', 'text'],
-                id_number: ['Cedula', 'text'],
+                company_name: ['Nombre de empresa', 'text'],
+                contact_name: ['Contacto', 'text'],
                 email: ['Correo electronico', 'email'],
-                phone: ['Celular', 'text'],
+                ruc: ['RUC', 'text'],
+                phone: ['Telefono', 'text'],
               }).map(([name, [label, type]]) => (
                 <label key={name} className="space-y-1">
                   <span className="text-xs font-bold text-gray-500 uppercase">{label}</span>
                   <input
                     name={name}
                     type={type}
-                    required={name !== 'email'}
-                    maxLength={name === 'id_number' || name === 'phone' ? 10 : undefined}
-                    defaultValue={editingCustomer?.[name] ?? emptyCustomer[name]}
+                    required={name === 'company_name'}
+                    defaultValue={editingSupplier?.[name] ?? emptySupplier[name]}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </label>
@@ -242,9 +241,8 @@ const Customers = () => {
                 <span className="text-xs font-bold text-gray-500 uppercase">Direccion</span>
                 <textarea
                   name="address"
-                  required
                   rows="3"
-                  defaultValue={editingCustomer?.address || ''}
+                  defaultValue={editingSupplier?.address || ''}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                 />
               </label>
@@ -252,7 +250,7 @@ const Customers = () => {
                 <button type="button" onClick={() => setIsFormOpen(false)} className="px-5 py-3 bg-gray-100 rounded-xl font-bold">Cancelar</button>
                 <button disabled={saving} className="px-5 py-3 bg-primary-600 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-60">
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Guardar cliente
+                  Guardar proveedor
                 </button>
               </div>
             </form>
@@ -263,4 +261,4 @@ const Customers = () => {
   );
 };
 
-export default Customers;
+export default Suppliers;

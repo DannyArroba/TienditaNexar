@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { productsApi } from '../api';
-import { Plus, Edit2, Trash2, X, Upload, Loader2, Package, TrendingUp, ChevronDown, Barcode } from 'lucide-react';
+import { productsApi, suppliersApi } from '../api';
+import { Plus, Edit2, Trash2, X, Upload, Loader2, Package, TrendingUp, ChevronDown, Barcode, Building2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useCart } from '../context/CartContext';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
@@ -16,10 +17,12 @@ const Inventory = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [selectedImageName, setSelectedImageName] = useState('');
+  const [selectedSupplierId, setSelectedSupplierId] = useState('');
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchSuppliers();
   }, []);
 
   const fetchProducts = async () => {
@@ -42,12 +45,23 @@ const Inventory = () => {
       console.error(err);
     }
   };
+  
+  const fetchSuppliers = async () => {
+    try {
+      const res = await suppliersApi.getAll();
+      setSuppliers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (editingProduct) {
       setSelectedCategory(editingProduct.category);
+      setSelectedSupplierId(editingProduct.supplier_id || '');
     } else {
       setSelectedCategory('');
+      setSelectedSupplierId('');
     }
     setCategoryOpen(false);
     setSelectedImageName('');
@@ -113,6 +127,7 @@ const Inventory = () => {
     e.preventDefault();
     setSaving(true);
     const formData = new FormData(e.target);
+    formData.append('supplier_id', selectedSupplierId);
     
     if (editingProduct) {
       formData.append('action', 'update');
@@ -162,16 +177,20 @@ const Inventory = () => {
         </div>
       ) : (
         <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Codigo</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Stock</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
-              </tr>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Codigo</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Proveedor</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio de venta</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo unitario</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Stock</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo total</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
+                </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {products.map((product) => (
@@ -185,24 +204,36 @@ const Inventory = () => {
                     </div>
                   </td>
                   <td className="px-6 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <Barcode className="h-3.5 w-3.5 text-gray-400" />
-                      <span className="text-xs font-mono text-gray-500">{product.barcode || '---'}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-black uppercase rounded-lg">
-                      {product.category}
-                    </span>
-                  </td>
+                      <div className="flex items-center gap-1.5">
+                        <Barcode className="h-3.5 w-3.5 text-gray-400" />
+                        <span className="text-xs font-mono text-gray-500">{product.barcode || '---'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                        <span className="text-xs font-semibold text-gray-700">{product.supplier_name || 'Sin proveedor'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-black uppercase rounded-lg">
+                        {product.category}
+                      </span>
+                    </td>
                   <td className="px-6 py-3 font-black text-gray-900 text-sm">
                     ${parseFloat(product.price).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-3 text-sm text-gray-700">
+                    ${parseFloat(product.cost_price ?? 0).toFixed(2)}
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-2">
                       <Package className="h-3.5 w-3.5 text-gray-400" />
                       <span className="font-bold text-sm">{product.stock}</span>
                     </div>
+                  </td>
+                  <td className="px-6 py-3 font-bold text-sm text-green-700">
+                    ${(parseFloat(product.cost_price ?? 0) * parseInt(product.stock)).toFixed(2)}
                   </td>
                   <td className="px-6 py-3 text-right">
                     <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -232,16 +263,17 @@ const Inventory = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Purchase Modal (Abastecimiento) */}
       {isPurchaseModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b flex justify-between items-center bg-green-50">
-              <h2 className="text-xl font-bold text-green-900 flex items-center gap-2">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center bg-green-50 shrink-0">
+              <h2 className="text-lg md:text-xl font-bold text-green-900 flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 Abastecer Producto
               </h2>
@@ -249,7 +281,7 @@ const Inventory = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <form onSubmit={handlePurchase} className="p-8 space-y-6">
+            <form onSubmit={handlePurchase} className="p-4 md:p-8 space-y-6 overflow-y-auto">
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
                 <div className="h-12 w-12 rounded-xl overflow-hidden border border-gray-100 bg-white">
                   <img src={purchaseProduct?.image_url} alt={purchaseProduct?.name} className="h-full w-full object-cover" />
@@ -286,9 +318,9 @@ const Inventory = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-              <h2 className="text-xl font-bold text-gray-900">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 shrink-0">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
@@ -296,7 +328,7 @@ const Inventory = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-8 grid grid-cols-2 gap-6">
+            <form onSubmit={handleSave} className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre</label>
                 <input
@@ -321,13 +353,24 @@ const Inventory = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Precio</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Precio de venta</label>
                 <input
                   name="price"
                   type="number"
                   step="0.01"
                   required
                   defaultValue={editingProduct?.price}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Costo unitario</label>
+                <input
+                  name="cost_price"
+                  type="number"
+                  step="0.01"
+                  defaultValue={editingProduct?.cost_price ?? 0}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                 />
               </div>
@@ -341,6 +384,24 @@ const Inventory = () => {
                   defaultValue={editingProduct?.stock}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Proveedor</label>
+                <div className="relative">
+                  <select
+                    value={selectedSupplierId}
+                    onChange={(e) => setSelectedSupplierId(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                  >
+                    <option value="">Sin proveedor</option>
+                    {suppliers.map(supplier => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.company_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -37,9 +37,9 @@ if ($method === 'GET') {
         $category = $_GET['category'] ?? 'todas';
         if ($category !== 'todas') {
             $safeCat = $conn->real_escape_string($category);
-            $sql = "SELECT * FROM products WHERE category = '$safeCat'";
+            $sql = "SELECT p.*, s.company_name as supplier_name FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id WHERE p.category = '$safeCat'";
         } else {
-            $sql = "SELECT * FROM products";
+            $sql = "SELECT p.*, s.company_name as supplier_name FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id";
         }
         $result = $conn->query($sql);
         $products = [];

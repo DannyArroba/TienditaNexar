@@ -75,5 +75,43 @@ if ($conn->query($sql)) echo "Tabla 'purchase_items' verificada/creada.\n";
 $sql = "ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0";
 if ($conn->query($sql)) echo "Columna 'stock' verificada en 'products'.\n";
 
+// 5. Create suppliers table
+$sql = "CREATE TABLE IF NOT EXISTS suppliers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    company_name VARCHAR(255) NOT NULL,
+    contact_name VARCHAR(255),
+    email VARCHAR(255),
+    ruc VARCHAR(20),
+    phone VARCHAR(50),
+    address TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+if ($conn->query($sql)) echo "Tabla 'suppliers' verificada/creada.\n";
+
+// 6. Add supplier_id to products
+$sql = "ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_id INT NULL AFTER id";
+if ($conn->query($sql)) echo "Columna 'supplier_id' verificada en 'products'.\n";
+
+// 7. Add cost_price to products
+$sql = "ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price DECIMAL(10,2) DEFAULT 0 AFTER price";
+if ($conn->query($sql)) echo "Columna 'cost_price' verificada en 'products'.\n";
+
+// Add foreign key for supplier_id
+$sql = "SELECT COUNT(*) as cnt FROM information_schema.TABLE_CONSTRAINTS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'products' 
+        AND CONSTRAINT_NAME = 'fk_products_supplier'";
+$result = $conn->query($sql);
+$row = $result->fetch_assoc();
+if ($row['cnt'] == 0) {
+    $sql = "ALTER TABLE products 
+            ADD INDEX idx_products_supplier_id (supplier_id),
+            ADD CONSTRAINT fk_products_supplier 
+            FOREIGN KEY (supplier_id) REFERENCES suppliers(id) 
+            ON UPDATE CASCADE ON DELETE SET NULL";
+    if ($conn->query($sql)) echo "Clave foránea 'fk_products_supplier' agregada.\n";
+}
+
 echo "Migración completada.\n";
 ?>

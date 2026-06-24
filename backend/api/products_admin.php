@@ -80,43 +80,47 @@ ensureBarcodeColumn($conn);
 $action = $_POST['action'] ?? '';
 
 if ($action === 'add') {
-    $name = $conn->real_escape_string($_POST['name'] ?? '');
-    $barcode = $conn->real_escape_string($_POST['barcode'] ?? '');
-    $price = (float)($_POST['price'] ?? 0);
-    $stock = (int)($_POST['stock'] ?? 0);
-    $category = $conn->real_escape_string($_POST['category'] ?? '');
-    $description = $conn->real_escape_string($_POST['description'] ?? '');
-    $image = saveUploadedImage($_FILES['image'] ?? null) ?? "";
+        $name = $conn->real_escape_string($_POST['name'] ?? '');
+        $barcode = $conn->real_escape_string($_POST['barcode'] ?? '');
+        $price = (float)($_POST['price'] ?? 0);
+        $cost_price = (float)($_POST['cost_price'] ?? 0);
+        $stock = (int)($_POST['stock'] ?? 0);
+        $category = $conn->real_escape_string($_POST['category'] ?? '');
+        $description = $conn->real_escape_string($_POST['description'] ?? '');
+        $supplier_id = !empty($_POST['supplier_id']) ? (int)$_POST['supplier_id'] : null;
+        $image = saveUploadedImage($_FILES['image'] ?? null) ?? "";
 
-    $sql = "INSERT INTO products (name, barcode, price, stock, category, description, image)
-            VALUES ('$name', '$barcode', '$price', '$stock', '$category', '$description', '$image')";
+        $sql = "INSERT INTO products (name, barcode, price, cost_price, stock, category, description, supplier_id, image)
+                VALUES ('$name', '$barcode', '$price', '$cost_price', '$stock', '$category', '$description', " . ($supplier_id ? $supplier_id : "NULL") . ", '$image')";
 
-    if ($conn->query($sql) === TRUE) {
-        respond("success", "Producto anadido");
+        if ($conn->query($sql) === TRUE) {
+            respond("success", "Producto anadido");
+        }
+
+        respond("error", $conn->error);
     }
 
-    respond("error", $conn->error);
-}
+    if ($action === 'update') {
+        $id = (int)($_POST['id'] ?? 0);
+        $name = $conn->real_escape_string($_POST['name'] ?? '');
+        $barcode = $conn->real_escape_string($_POST['barcode'] ?? '');
+        $price = (float)($_POST['price'] ?? 0);
+        $cost_price = (float)($_POST['cost_price'] ?? 0);
+        $stock = (int)($_POST['stock'] ?? 0);
+        $category = $conn->real_escape_string($_POST['category'] ?? '');
+        $description = $conn->real_escape_string($_POST['description'] ?? '');
+        $supplier_id = !empty($_POST['supplier_id']) ? (int)$_POST['supplier_id'] : null;
 
-if ($action === 'update') {
-    $id = (int)($_POST['id'] ?? 0);
-    $name = $conn->real_escape_string($_POST['name'] ?? '');
-    $barcode = $conn->real_escape_string($_POST['barcode'] ?? '');
-    $price = (float)($_POST['price'] ?? 0);
-    $stock = (int)($_POST['stock'] ?? 0);
-    $category = $conn->real_escape_string($_POST['category'] ?? '');
-    $description = $conn->real_escape_string($_POST['description'] ?? '');
+        $imageSql = "";
+        $image = saveUploadedImage($_FILES['image'] ?? null);
+        if ($image !== null) {
+            $imageSql = ", image='$image'";
+        }
 
-    $imageSql = "";
-    $image = saveUploadedImage($_FILES['image'] ?? null);
-    if ($image !== null) {
-        $imageSql = ", image='$image'";
-    }
-
-    $sql = "UPDATE products
-            SET name='$name', barcode='$barcode', price='$price', stock='$stock', category='$category',
-                description='$description' $imageSql
-            WHERE id=$id";
+        $sql = "UPDATE products
+                SET name='$name', barcode='$barcode', price='$price', cost_price='$cost_price', stock='$stock', category='$category',
+                    description='$description', supplier_id=" . ($supplier_id ? $supplier_id : "NULL") . " $imageSql
+                WHERE id=$id";
 
     if ($conn->query($sql) === TRUE) {
         respond("success", "Producto actualizado");

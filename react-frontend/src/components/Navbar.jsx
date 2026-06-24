@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, User, LogOut, Menu, Search, Bell, Clock, HelpCircle, Shield } from 'lucide-react';
+import React from 'react';
+import { ShoppingCart, User, LogOut, Menu, Search, Bell, HelpCircle, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
@@ -9,12 +9,6 @@ const Navbar = () => {
   const user = auth?.user;
   const logout = auth?.logout;
   const { cartCount, setIsOpen } = useCart();
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
@@ -32,16 +26,7 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* Live Clock (Professional POS feel) */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100">
-              <Clock className="h-3.5 w-3.5 text-primary-600" />
-              <div className="flex flex-col">
-                <span className="text-[8px] font-black text-gray-400 uppercase leading-none">Hora Local</span>
-                <span className="text-[10px] font-bold text-gray-700 uppercase tracking-wider">
-                  {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            </div>
+
           </div>
 
           {/* Right: Actions */}
@@ -52,7 +37,8 @@ const Navbar = () => {
                   <Link to="/dashboard" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Dashboard</Link>
                   <Link to="/sales" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Productos</Link>
                   <Link to="/inventory" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Inventario</Link>
-                  <Link to="/customers" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Clientes</Link>
+                      <Link to="/suppliers" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Proveedores</Link>
+                      <Link to="/customers" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Clientes</Link>
                   <Link to="/transactions" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Transacciones</Link>
                   {user.role === 'admin' && (
                     <Link to="/users" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Personal</Link>

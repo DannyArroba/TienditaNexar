@@ -3,9 +3,6 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: '/api/backend/api',
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 export const productsApi = {
@@ -26,48 +23,86 @@ export const productsApi = {
 };
 
 export const authApi = {
-  login: (email, password) => api.post('/auth.php', { action: 'login', email, password }),
-  register: (email, password) => api.post('/auth.php', { action: 'register', email, password }),
-  logout: () => api.post('/auth.php', { action: 'logout' }),
-  check: () => api.post('/auth.php', { action: 'check' }),
+  login: (email, password) => api.post('/auth.php', { action: 'login', email, password }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  register: (email, password) => api.post('/auth.php', { action: 'register', email, password }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  logout: () => api.post('/auth.php', { action: 'logout' }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  check: () => api.post('/auth.php', { action: 'check' }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
 };
 
 export const cartApi = {
   get: () => api.get('/cart.php'),
-  add: (id, quantity) => api.post('/cart.php', { action: 'add', id, quantity }),
-  remove: (id) => api.post('/cart.php', { action: 'remove', id }),
-  update: (id, quantity) => api.post('/cart.php', { action: 'update', id, quantity }),
-  clear: () => api.post('/cart.php', { action: 'clear' }),
+  add: (id, quantity) => api.post('/cart.php', { action: 'add', id, quantity }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  remove: (id) => api.post('/cart.php', { action: 'remove', id }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  update: (id, quantity) => api.post('/cart.php', { action: 'update', id, quantity }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  clear: () => api.post('/cart.php', { action: 'clear' }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
 };
 
 export const checkoutApi = {
-  process: (data) => api.post('/checkout.php', data),
+  process: (data) => api.post('/checkout.php', data, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
 };
 
 export const dashboardApi = {
-  getStats: () => api.get('/dashboard.php'),
+  getStats: (year, month, isAnnual) => api.get('/dashboard.php', { params: { year, month, is_annual: isAnnual } }),
   getPublicStats: () => api.get('/public_stats.php'),
 };
 
 export const usersApi = {
   getAll: () => api.get('/users.php'),
-  add: (data) => api.post('/users.php', { action: 'add', ...data }),
-  update: (data) => api.post('/users.php', { action: 'update', ...data }),
-  delete: (id) => api.post('/users.php', { action: 'delete', id }),
+  add: (data) => api.post('/users.php', { action: 'add', ...data }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  update: (data) => api.post('/users.php', { action: 'update', ...data }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  delete: (id) => api.post('/users.php', { action: 'delete', id }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
 };
 
 export const customersApi = {
   getAll: () => api.get('/customers.php'),
   getById: (id) => api.get(`/customers.php?id=${id}`),
   findByIdNumber: (idNumber) => api.get(`/customers.php?id_number=${encodeURIComponent(idNumber)}`),
-  add: (data) => api.post('/customers.php', { action: 'add', ...data }),
-  update: (data) => api.post('/customers.php', { action: 'update', ...data }),
-  delete: (id) => api.post('/customers.php', { action: 'delete', id }),
+  add: (data) => api.post('/customers.php', { action: 'add', ...data }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  update: (data) => api.post('/customers.php', { action: 'update', ...data }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
+  delete: (id) => api.post('/customers.php', { action: 'delete', id }, {
+    headers: { 'Content-Type': 'application/json' }
+  }),
 };
 
 export const transactionsApi = {
   getAll: () => api.get('/transactions.php?action=list'),
   getDetails: (id) => api.get(`/transactions.php?action=details&id=${id}`),
+};
+
+export const suppliersApi = {
+  getAll: () => api.get('/suppliers.php'),
+  getById: (id) => api.get(`/suppliers.php?id=${id}`),
+  add: (formData) => api.post('/suppliers.php', formData),
+  update: (formData) => api.post('/suppliers.php', formData),
+  delete: (formData) => api.post('/suppliers.php', formData),
 };
 
 export default api;
