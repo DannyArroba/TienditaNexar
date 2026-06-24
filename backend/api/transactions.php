@@ -21,7 +21,12 @@ if (!isset($_SESSION['user_id'])) {
 $action = $_GET['action'] ?? 'list';
 
 if ($action === 'list') {
-    $res = $conn->query("SELECT * FROM purchases ORDER BY created_at DESC");
+    $res = $conn->query("
+        SELECT p.*, COALESCE(c.name, p.customer_name) AS display_customer_name
+        FROM purchases p
+        LEFT JOIN customers c ON c.id = p.customer_id
+        ORDER BY p.created_at DESC
+    ");
     $transactions = [];
     while ($row = $res->fetch_assoc()) {
         $transactions[] = $row;

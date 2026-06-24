@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { productsApi } from '../api';
-import { Plus, Edit2, Trash2, X, Upload, Loader2, Package, TrendingUp, ShoppingCart } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload, Loader2, Package, TrendingUp, ChevronDown, Barcode } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useCart } from '../context/CartContext';
 
@@ -14,7 +14,8 @@ const Inventory = () => {
   const [purchaseProduct, setPurchaseProduct] = useState(null);
   const [saving, setSaving] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [showOtherCategory, setShowOtherCategory] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [selectedImageName, setSelectedImageName] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -45,11 +46,11 @@ const Inventory = () => {
   useEffect(() => {
     if (editingProduct) {
       setSelectedCategory(editingProduct.category);
-      setShowOtherCategory(false);
     } else {
       setSelectedCategory('');
-      setShowOtherCategory(false);
     }
+    setCategoryOpen(false);
+    setSelectedImageName('');
   }, [editingProduct, isModalOpen]);
 
   const handlePurchase = async (e) => {
@@ -65,6 +66,7 @@ const Inventory = () => {
     updateData.append('action', 'update');
     updateData.append('id', updatedProduct.id);
     updateData.append('name', updatedProduct.name);
+    updateData.append('barcode', updatedProduct.barcode || '');
     updateData.append('price', updatedProduct.price);
     updateData.append('stock', updatedProduct.stock);
     updateData.append('category', updatedProduct.category);
@@ -131,7 +133,8 @@ const Inventory = () => {
         Swal.fire('Error', res.data.message, 'error');
       }
     } catch (err) {
-      Swal.fire('Error', 'Ocurrió un error al guardar', 'error');
+      const message = err.response?.data?.message || 'Ocurrió un error al guardar';
+      Swal.fire('Error', message, 'error');
     } finally {
       setSaving(false);
     }
@@ -163,6 +166,7 @@ const Inventory = () => {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Codigo</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Stock</th>
@@ -178,6 +182,12 @@ const Inventory = () => {
                         <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
                       </div>
                       <span className="font-bold text-gray-900 text-sm">{product.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <Barcode className="h-3.5 w-3.5 text-gray-400" />
+                      <span className="text-xs font-mono text-gray-500">{product.barcode || '---'}</span>
                     </div>
                   </td>
                   <td className="px-6 py-3">
@@ -287,7 +297,7 @@ const Inventory = () => {
             </div>
             
             <form onSubmit={handleSave} className="p-8 grid grid-cols-2 gap-6">
-              <div className="col-span-2 space-y-2">
+              <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre</label>
                 <input
                   name="name"
@@ -295,6 +305,19 @@ const Inventory = () => {
                   defaultValue={editingProduct?.name}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Codigo de barras</label>
+                <div className="relative">
+                  <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    name="barcode"
+                    defaultValue={editingProduct?.barcode || ''}
+                    placeholder="Escanea o escribe el codigo..."
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all font-mono"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -325,18 +348,70 @@ const Inventory = () => {
                 <div className="relative">
                   <input
                     name="category"
-                    list="categories-list"
                     required
-                    defaultValue={editingProduct?.category}
+                    autoComplete="off"
+                    value={selectedCategory}
+                    onChange={(event) => {
+                      setSelectedCategory(event.target.value);
+                      setCategoryOpen(true);
+                    }}
+                    onFocus={() => setCategoryOpen(true)}
+                    onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
                     placeholder="Escribe o selecciona una categoría..."
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                   />
-                  <datalist id="categories-list">
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat} />
-                    ))}
-                  </datalist>
+                  <button
+                    type="button"
+                    title="Mostrar categorías"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => setCategoryOpen((open) => !open)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${categoryOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {categoryOpen && (
+                    <div className="absolute z-20 mt-2 w-full max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl">
+                      {categories
+                        .filter((category) =>
+                          category.toLowerCase().includes(selectedCategory.trim().toLowerCase())
+                        )
+                        .map((category) => (
+                          <button
+                            key={category}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setSelectedCategory(category);
+                              setCategoryOpen(false);
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm font-semibold text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                          >
+                            {category}
+                          </button>
+                        ))}
+
+                      {selectedCategory.trim() &&
+                        !categories.some(
+                          (category) => category.toLowerCase() === selectedCategory.trim().toLowerCase()
+                        ) && (
+                          <div className="px-4 py-3 border-t border-gray-100 text-xs text-gray-500">
+                            Se guardará la nueva categoría <strong>{selectedCategory.trim()}</strong>
+                          </div>
+                        )}
+
+                      {categories.filter((category) =>
+                        category.toLowerCase().includes(selectedCategory.trim().toLowerCase())
+                      ).length === 0 &&
+                        !selectedCategory.trim() && (
+                          <div className="px-4 py-3 text-xs text-gray-500">
+                            No hay categorías registradas. Escribe una nueva.
+                          </div>
+                        )}
+                    </div>
+                  )}
                 </div>
+                <p className="text-xs text-gray-400 ml-1">Selecciona una existente o escribe una nueva.</p>
               </div>
 
               <div className="space-y-2">
@@ -345,13 +420,29 @@ const Inventory = () => {
                   <input
                     name="image"
                     type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(event) => setSelectedImageName(event.target.files?.[0]?.name || '')}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                   <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl flex items-center gap-2 text-gray-500">
                     <Upload className="h-5 w-5" />
-                    <span className="text-sm">Subir imagen...</span>
+                    <span className="text-sm truncate">
+                      {selectedImageName || (editingProduct?.image ? 'Cambiar imagen...' : 'Subir imagen...')}
+                    </span>
                   </div>
                 </div>
+                <p className="text-xs text-gray-400 ml-1">JPG, PNG, WEBP o GIF. Máximo 5 MB.</p>
+              </div>
+
+              <div className="col-span-2 space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Descripción</label>
+                <textarea
+                  name="description"
+                  rows="3"
+                  defaultValue={editingProduct?.description || ''}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all resize-none"
+                  placeholder="Descripción breve del producto"
+                />
               </div>
 
               <div className="col-span-2 flex gap-4 mt-4">

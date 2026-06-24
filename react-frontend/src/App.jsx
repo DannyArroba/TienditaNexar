@@ -15,6 +15,7 @@ import Support from './pages/Support';
 import Help from './pages/Help';
 import Terms from './pages/Terms';
 import Transactions from './pages/Transactions';
+import Customers from './pages/Customers';
 import { useAuth } from './context/AuthContext';
 
 function AppContent() {
@@ -41,6 +42,7 @@ function AppContent() {
           <Route path="/inventory" element={user ? <Inventory /> : <Navigate to="/login" />} />
           <Route path="/users" element={user?.role === 'admin' ? <Users /> : <Navigate to="/dashboard" />} />
           <Route path="/transactions" element={user ? <Transactions /> : <Navigate to="/login" />} />
+          <Route path="/customers" element={user ? <Customers /> : <Navigate to="/login" />} />
           <Route path="/checkout" element={user ? <Checkout /> : <Navigate to="/login" />} />
           <Route path="/support" element={<Support />} />
           <Route path="/help" element={<Help />} />

@@ -48,9 +48,12 @@ const Login = () => {
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <span className="text-3xl font-black text-primary-600 tracking-tighter flex items-center gap-1">
+            <span className="text-3xl font-black text-primary-600 tracking-tighter flex items-center gap-2">
               <span className="bg-primary-600 text-white px-2 py-0.5 rounded-lg">3</span>
-              <span className="text-gray-900 uppercase">Hermanos</span>
+              <span className="flex flex-col items-start">
+                <span className="text-[9px] text-primary-600 uppercase leading-none">Local Comercial</span>
+                <span className="text-xl text-gray-900 uppercase leading-none mt-1">Tres Hermanos</span>
+              </span>
             </span>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Acceso al Sistema</h2>
@@ -104,7 +107,7 @@ const Login = () => {
 
         <p className="text-center mt-8 text-gray-500 text-sm font-medium">
           Sistema de uso exclusivo para personal autorizado de <br />
-          <span className="text-primary-600 font-bold uppercase">Supermercado 3 Hermanos</span>
+          <span className="text-primary-600 font-bold uppercase">Local Comercial Tres Hermanos</span>
         </p>
       </div>
     </div>

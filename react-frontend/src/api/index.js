@@ -56,6 +56,15 @@ export const usersApi = {
   delete: (id) => api.post('/users.php', { action: 'delete', id }),
 };
 
+export const customersApi = {
+  getAll: () => api.get('/customers.php'),
+  getById: (id) => api.get(`/customers.php?id=${id}`),
+  findByIdNumber: (idNumber) => api.get(`/customers.php?id_number=${encodeURIComponent(idNumber)}`),
+  add: (data) => api.post('/customers.php', { action: 'add', ...data }),
+  update: (data) => api.post('/customers.php', { action: 'update', ...data }),
+  delete: (id) => api.post('/customers.php', { action: 'delete', id }),
+};
+
 export const transactionsApi = {
   getAll: () => api.get('/transactions.php?action=list'),
   getDetails: (id) => api.get(`/transactions.php?action=details&id=${id}`),

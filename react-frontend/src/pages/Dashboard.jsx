@@ -55,7 +55,7 @@ const Dashboard = () => {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(22, 163, 74); // primary-600
-    doc.text('SUPERMERCADO 3 HERMANOS', 105, 20, { align: 'center' });
+    doc.text('LOCAL COMERCIAL TRES HERMANOS', 105, 20, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -67,7 +67,7 @@ const Dashboard = () => {
     // Purchase Info
     doc.setFontSize(12);
     doc.setTextColor(0);
-    doc.text(`${purchase.purchase_type === 'FACTURA' ? 'FACTURA INTERNA' : 'NOTA DE VENTA'}`, 20, 45);
+    doc.text(`${purchase.purchase_type === 'FACTURA' ? 'COMPROBANTE DE VENTA' : 'NOTA DE VENTA'}`, 20, 45);
     doc.setFontSize(10);
     doc.text(`Nro. Comprobante: #000${purchase.id}`, 20, 52);
     doc.text(`Fecha: ${date}`, 20, 57);
@@ -209,7 +209,9 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-black text-primary-600 text-lg tracking-tighter">${parseFloat(sale.total).toFixed(2)}</p>
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[8px] font-black uppercase rounded-lg tracking-widest">{sale.purchase_type}</span>
+                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[8px] font-black uppercase rounded-lg tracking-widest">
+                    {sale.purchase_type === 'FACTURA' ? 'Comprobante de venta' : 'Nota de venta'}
+                  </span>
                 </div>
               </div>
             ))}
@@ -293,7 +295,9 @@ const Dashboard = () => {
                           <CreditCard className="h-3 w-3" />
                           <span className="text-[8px] font-black uppercase tracking-widest">Tipo</span>
                         </div>
-                        <p className="text-xs font-black text-gray-900">{details.purchase.purchase_type.replace('_', ' ')}</p>
+                        <p className="text-xs font-black text-gray-900">
+                          {details.purchase.purchase_type === 'FACTURA' ? 'Comprobante de venta' : 'Nota de venta'}
+                        </p>
                       </div>
                       <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100">
                         <div className="flex items-center gap-2 text-primary-400 mb-1">

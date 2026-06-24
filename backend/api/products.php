@@ -13,6 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 include('../db.php');
 
+function ensureBarcodeColumn($conn) {
+    $result = $conn->query("SHOW COLUMNS FROM products LIKE 'barcode'");
+    if ($result && $result->num_rows === 0) {
+        $conn->query("ALTER TABLE products ADD COLUMN barcode VARCHAR(100) DEFAULT NULL AFTER name");
+    }
+}
+
+ensureBarcodeColumn($conn);
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {

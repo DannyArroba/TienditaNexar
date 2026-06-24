@@ -7,8 +7,8 @@ const Help = () => {
   const sections = [
     {
       icon: <ShoppingCart className="h-6 w-6" />,
-      title: "Ventas y POS",
-      desc: "Aprende a realizar ventas rápidas, aplicar descuentos y generar tickets en PDF.",
+      title: "Productos y carrito",
+      desc: "Consulta los productos disponibles, selecciona cantidades y agrégalos al carrito.",
       color: "text-blue-500",
       bg: "bg-blue-50"
     },
@@ -38,7 +38,7 @@ const Help = () => {
   const faqs = [
     {
       q: "¿Cómo genero una nota de venta?",
-      a: "Al finalizar una compra en el módulo de ventas, haz clic en 'Confirmar'. El sistema generará automáticamente un PDF profesional."
+      a: "Después de seleccionar los productos, abre el carrito y confirma el comprobante. El sistema generará automáticamente el PDF."
     },
     {
       q: "¿Cómo recupero mi contraseña?",
@@ -46,7 +46,7 @@ const Help = () => {
     },
     {
       q: "¿El sistema funciona sin internet?",
-      a: "TienditaNexar está optimizado para funcionar en tu red local (XAMPP), asegurando disponibilidad total sin depender de conexión externa."
+      a: "Cristhian & Nexar está optimizado para funcionar en tu red local (XAMPP), asegurando disponibilidad total sin depender de conexión externa."
     }
   ];
 

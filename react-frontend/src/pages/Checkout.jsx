@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { checkoutApi } from '../api';
-import { CreditCard, Truck, ShieldCheck, CheckCircle2, Loader2, ArrowLeft, XCircle } from 'lucide-react';
+import { checkoutApi, customersApi } from '../api';
+import { ShieldCheck, CheckCircle2, Loader2, ArrowLeft, XCircle, Search, UserCheck } from 'lucide-react';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -13,6 +13,8 @@ const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [searchingCustomer, setSearchingCustomer] = useState(false);
+  const [customerLookup, setCustomerLookup] = useState(null);
   
   const [formData, setFormData] = useState({
     purchase_type: 'CONSUMIDOR_FINAL',
@@ -30,7 +32,7 @@ const Checkout = () => {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(22, 163, 74); // primary-600
-    doc.text('SUPERMERCADO 3 HERMANOS', 105, 20, { align: 'center' });
+    doc.text('LOCAL COMERCIAL TRES HERMANOS', 105, 20, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -42,7 +44,7 @@ const Checkout = () => {
     // Purchase Info
     doc.setFontSize(12);
     doc.setTextColor(0);
-    doc.text(`${formData.purchase_type === 'FACTURA' ? 'FACTURA INTERNA' : 'NOTA DE VENTA'}`, 20, 45);
+    doc.text(`${formData.purchase_type === 'FACTURA' ? 'COMPROBANTE DE VENTA' : 'NOTA DE VENTA'}`, 20, 45);
     doc.setFontSize(10);
     doc.text(`Nro. Comprobante: #000${purchaseId}`, 20, 52);
     doc.text(`Fecha: ${date}`, 20, 57);
@@ -108,7 +110,7 @@ const Checkout = () => {
         <div className="bg-white p-12 rounded-3xl shadow-xl text-center max-w-md">
           <XCircle className="h-20 w-20 text-red-100 mx-auto mb-6" />
           <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tighter uppercase">Venta Vacía</h2>
-          <p className="text-gray-500 mb-8 font-medium">No hay productos seleccionados para facturar.</p>
+          <p className="text-gray-500 mb-8 font-medium">No hay productos seleccionados para generar el comprobante.</p>
           <button 
             onClick={() => navigate('/sales')}
             className="w-full bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-primary-100"
@@ -121,7 +123,42 @@ const Checkout = () => {
   }
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const value = ['customer_idnumber', 'customer_phone'].includes(e.target.name)
+      ? e.target.value.replace(/\D/g, '').slice(0, 10)
+      : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
+    if (e.target.name === 'customer_idnumber') {
+      setCustomerLookup(null);
+    }
+  };
+
+  const findCustomer = async () => {
+    if (!/^22\d{8}$/.test(formData.customer_idnumber)) {
+      setCustomerLookup({ found: false, message: 'Ingresa una cedula de 10 digitos que inicie con 22.' });
+      return;
+    }
+
+    setSearchingCustomer(true);
+    try {
+      const response = await customersApi.findByIdNumber(formData.customer_idnumber);
+      const customer = response.data.data;
+      if (customer) {
+        setFormData((current) => ({
+          ...current,
+          customer_name: customer.name || '',
+          customer_email: customer.email || '',
+          customer_phone: customer.phone || '',
+          customer_address: customer.address || '',
+        }));
+        setCustomerLookup({ found: true, message: 'Cliente encontrado. Sus datos fueron completados.' });
+      } else {
+        setCustomerLookup({ found: false, message: 'Cliente nuevo. Completa sus datos y se guardara con esta venta.' });
+      }
+    } catch (error) {
+      setCustomerLookup({ found: false, message: 'No se pudo consultar el cliente.' });
+    } finally {
+      setSearchingCustomer(false);
+    }
   };
 
   const handleCancel = async () => {
@@ -152,6 +189,10 @@ const Checkout = () => {
 
     setLoading(true);
     try {
+      if (formData.purchase_type === 'FACTURA' && !/^22\d{8}$/.test(formData.customer_idnumber)) {
+        Swal.fire('Cedula invalida', 'Debe iniciar con 22 y contener 10 digitos', 'error');
+        return;
+      }
       const res = await checkoutApi.process(formData);
       if (res.data.status === 'success') {
         // Generar PDF
@@ -192,15 +233,18 @@ const Checkout = () => {
           {/* Formulario */}
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Detalles de Facturación</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Datos del Comprobante de Venta</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Factura</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Comprobante</label>
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, purchase_type: 'CONSUMIDOR_FINAL' })}
+                      onClick={() => {
+                        setFormData({ ...formData, purchase_type: 'CONSUMIDOR_FINAL' });
+                        setCustomerLookup(null);
+                      }}
                       className={`py-3 px-4 rounded-xl border-2 transition-all font-medium ${
                         formData.purchase_type === 'CONSUMIDOR_FINAL'
                           ? 'border-primary-600 bg-primary-50 text-primary-700'
@@ -218,7 +262,7 @@ const Checkout = () => {
                           : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
                       }`}
                     >
-                      Factura (Sin Validez Tributaria)
+                      Comprobante de Venta
                     </button>
                   </div>
                 </div>
@@ -241,12 +285,32 @@ const Checkout = () => {
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Cédula / RUC</label>
                         <input
                           type="text"
+                          inputMode="numeric"
                           name="customer_idnumber"
                           required
+                          maxLength="10"
                           value={formData.customer_idnumber}
                           onChange={handleInputChange}
+                          onBlur={() => formData.customer_idnumber.length === 10 && findCustomer()}
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                         />
+                        <button
+                          type="button"
+                          onClick={findCustomer}
+                          disabled={searchingCustomer}
+                          className="mt-2 w-full py-2.5 bg-gray-900 hover:bg-primary-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          {searchingCustomer ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                          Buscar cliente
+                        </button>
+                        {customerLookup && (
+                          <div className={`mt-2 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+                            customerLookup.found ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+                          }`}>
+                            {customerLookup.found && <UserCheck className="h-4 w-4" />}
+                            {customerLookup.message}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -254,7 +318,6 @@ const Checkout = () => {
                       <input
                         type="email"
                         name="customer_email"
-                        required
                         value={formData.customer_email}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
@@ -264,15 +327,17 @@ const Checkout = () => {
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Teléfono</label>
                       <input
                         type="text"
+                        inputMode="numeric"
                         name="customer_phone"
                         required
+                        maxLength="10"
                         value={formData.customer_phone}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Dirección de Envío</label>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Dirección</label>
                       <textarea
                         name="customer_address"
                         required

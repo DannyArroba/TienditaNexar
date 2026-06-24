@@ -1,124 +1,195 @@
 <?php
 session_start();
-// Habilitar reporte de errores de MySQLi para lanzar excepciones
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Configuración de CORS para permitir credenciales (sesiones)
 $origin = $_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:5173';
 header("Access-Control-Allow-Origin: $origin");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json; charset=UTF-8");
 
-// Manejo de peticiones OPTIONS (preflight)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
 include('../db.php');
 
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(["status" => "error", "message" => "Sesión expirada. Por favor, inicia sesión de nuevo."]);
+function respond($status, $message, $extra = []) {
+    echo json_encode(array_merge([
+        "status" => $status,
+        "message" => $message
+    ], $extra));
     exit();
 }
 
-$method = $_SERVER['REQUEST_METHOD'];
-$data = json_decode(file_get_contents("php://input"), true);
+if (!isset($_SESSION['user_id'])) {
+    respond("error", "Sesion expirada. Inicia sesion nuevamente.");
+}
 
-if ($method === 'POST') {
-    $user_id = (int)$_SESSION['user_id'];
-    $purchase_type = $data['purchase_type'] ?? 'CONSUMIDOR_FINAL';
-    
-    // Asegurar que los campos opcionales sean NULL si están vacíos
-    $customer_name = !empty($data['customer_name']) ? $data['customer_name'] : null;
-    $customer_email = !empty($data['customer_email']) ? $data['customer_email'] : null;
-    $customer_phone = !empty($data['customer_phone']) ? $data['customer_phone'] : null;
-    $customer_address = !empty($data['customer_address']) ? $data['customer_address'] : null;
-    $customer_idnumber = !empty($data['customer_idnumber']) ? $data['customer_idnumber'] : null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    respond("error", "Metodo no permitido");
+}
 
-    if (!isset($_SESSION['cart']) || count($_SESSION['cart']) === 0) {
-        echo json_encode(["status" => "error", "message" => "El carrito está vacío."]);
-        exit();
-    }
+$data = json_decode(file_get_contents("php://input"), true) ?? [];
+$userId = (int)$_SESSION['user_id'];
+$purchaseType = $data['purchase_type'] ?? 'CONSUMIDOR_FINAL';
 
-    $subtotal = 0;
-    foreach ($_SESSION['cart'] as $item) {
-        $subtotal += (float)$item['price'] * (int)$item['quantity'];
-    }
-    $iva = $subtotal * 0.15;
-    $total = $subtotal + $iva;
+$customerName = trim($data['customer_name'] ?? '');
+$customerEmail = trim($data['customer_email'] ?? '');
+$customerPhone = trim($data['customer_phone'] ?? '');
+$customerAddress = trim($data['customer_address'] ?? '');
+$customerIdNumber = trim($data['customer_idnumber'] ?? '');
 
-    $conn->begin_transaction();
-    try {
-        // 1. Insertar la compra principal
-        $stmt = $conn->prepare("
-            INSERT INTO purchases 
-            (user_id, purchase_type, customer_name, customer_email, customer_phone, customer_address, customer_idnumber, subtotal, iva, total) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        
-        $stmt->bind_param("issssssddd", 
-            $user_id, 
-            $purchase_type, 
-            $customer_name, 
-            $customer_email, 
-            $customer_phone, 
-            $customer_address, 
-            $customer_idnumber, 
-            $subtotal, 
-            $iva, 
-            $total
-        );
-        
-        $stmt->execute();
-        $purchase_id = $stmt->insert_id;
-        $stmt->close();
+if (!isset($_SESSION['cart']) || count($_SESSION['cart']) === 0) {
+    respond("error", "El carrito esta vacio.");
+}
 
-        // 2. Insertar los items de la compra
-        $stmtItem = $conn->prepare("
-            INSERT INTO purchase_items (purchase_id, product_id, product_name, unit_price, quantity, line_total) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+$subtotal = 0;
+foreach ($_SESSION['cart'] as $item) {
+    $subtotal += (float)$item['price'] * (int)$item['quantity'];
+}
+$iva = $subtotal * 0.15;
+$total = $subtotal + $iva;
 
-        foreach ($_SESSION['cart'] as $item) {
-            $pid = (int)$item['id'];
-            $pname = $item['name'];
-            $uprice = (float)$item['price'];
-            $qty = (int)$item['quantity'];
-            $line = $uprice * $qty;
+$conn->begin_transaction();
 
-            $stmtItem->bind_param("iisdid", $purchase_id, $pid, $pname, $uprice, $qty, $line);
-            $stmtItem->execute();
+try {
+    $customerId = null;
 
-            // 3. Descontar stock (opcionalmente podrías verificar si hay suficiente stock aquí)
-            $conn->query("UPDATE products SET stock = stock - $qty WHERE id = $pid");
+    if ($purchaseType === 'FACTURA') {
+        if (!preg_match('/^22\d{8}$/', $customerIdNumber)) {
+            throw new Exception("La cedula debe iniciar con 22 y contener 10 digitos.");
         }
-        $stmtItem->close();
+        if (!preg_match('/^09\d{8}$/', $customerPhone)) {
+            throw new Exception("El celular debe iniciar con 09 y contener 10 digitos.");
+        }
+        if ($customerName === '' || $customerAddress === '') {
+            throw new Exception("Nombre y direccion del cliente son obligatorios.");
+        }
+        if ($customerEmail !== '' && !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("El correo electronico no es valido.");
+        }
 
-        $conn->commit();
-        
-        // Limpiar carrito después de una compra exitosa
-        $_SESSION['cart'] = [];
-        
-        echo json_encode([
-            "status" => "success", 
-            "message" => "¡Venta registrada con éxito!", 
-            "purchase_id" => $purchase_id
-        ]);
+        $findCustomer = $conn->prepare("SELECT id FROM customers WHERE id_number = ?");
+        $findCustomer->bind_param("s", $customerIdNumber);
+        $findCustomer->execute();
+        $existingCustomer = $findCustomer->get_result()->fetch_assoc();
+        $findCustomer->close();
 
-    } catch (Exception $e) {
-        $conn->rollback();
-        echo json_encode([
-            "status" => "error", 
-            "message" => "Error en la base de datos: " . $e->getMessage()
-        ]);
-    } catch (Throwable $t) {
-        $conn->rollback();
-        echo json_encode([
-            "status" => "error", 
-            "message" => "Error inesperado del sistema: " . $t->getMessage()
-        ]);
+        if ($existingCustomer) {
+            $customerId = (int)$existingCustomer['id'];
+            $updateCustomer = $conn->prepare("
+                UPDATE customers
+                SET name = ?, email = NULLIF(?, ''), phone = ?, address = ?
+                WHERE id = ?
+            ");
+            $updateCustomer->bind_param(
+                "ssssi",
+                $customerName,
+                $customerEmail,
+                $customerPhone,
+                $customerAddress,
+                $customerId
+            );
+            $updateCustomer->execute();
+            $updateCustomer->close();
+        } else {
+            $insertCustomer = $conn->prepare("
+                INSERT INTO customers (name, id_number, email, phone, address)
+                VALUES (?, ?, NULLIF(?, ''), ?, ?)
+            ");
+            $insertCustomer->bind_param(
+                "sssss",
+                $customerName,
+                $customerIdNumber,
+                $customerEmail,
+                $customerPhone,
+                $customerAddress
+            );
+            $insertCustomer->execute();
+            $customerId = $insertCustomer->insert_id;
+            $insertCustomer->close();
+        }
+    } else {
+        $customerName = null;
+        $customerEmail = null;
+        $customerPhone = null;
+        $customerAddress = null;
+        $customerIdNumber = null;
     }
+
+    $purchaseStmt = $conn->prepare("
+        INSERT INTO purchases
+        (user_id, customer_id, purchase_type, customer_name, customer_email,
+         customer_phone, customer_address, customer_idnumber, subtotal, iva, total)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    $purchaseStmt->bind_param(
+        "iissssssddd",
+        $userId,
+        $customerId,
+        $purchaseType,
+        $customerName,
+        $customerEmail,
+        $customerPhone,
+        $customerAddress,
+        $customerIdNumber,
+        $subtotal,
+        $iva,
+        $total
+    );
+    $purchaseStmt->execute();
+    $purchaseId = $purchaseStmt->insert_id;
+    $purchaseStmt->close();
+
+    $itemStmt = $conn->prepare("
+        INSERT INTO purchase_items
+        (purchase_id, product_id, product_name, unit_price, quantity, line_total)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    $stockStmt = $conn->prepare("
+        UPDATE products
+        SET stock = stock - ?
+        WHERE id = ? AND stock >= ?
+    ");
+
+    foreach ($_SESSION['cart'] as $item) {
+        $productId = (int)$item['id'];
+        $productName = $item['name'];
+        $unitPrice = (float)$item['price'];
+        $quantity = (int)$item['quantity'];
+        $lineTotal = $unitPrice * $quantity;
+
+        $stockStmt->bind_param("iii", $quantity, $productId, $quantity);
+        $stockStmt->execute();
+        if ($stockStmt->affected_rows !== 1) {
+            throw new Exception("Stock insuficiente para " . $productName);
+        }
+
+        $itemStmt->bind_param(
+            "iisdid",
+            $purchaseId,
+            $productId,
+            $productName,
+            $unitPrice,
+            $quantity,
+            $lineTotal
+        );
+        $itemStmt->execute();
+    }
+
+    $itemStmt->close();
+    $stockStmt->close();
+    $conn->commit();
+    $_SESSION['cart'] = [];
+
+    respond("success", "Venta registrada con exito", [
+        "purchase_id" => $purchaseId,
+        "customer_id" => $customerId
+    ]);
+} catch (Throwable $error) {
+    $conn->rollback();
+    respond("error", "No se pudo registrar la venta: " . $error->getMessage());
 }
 ?>

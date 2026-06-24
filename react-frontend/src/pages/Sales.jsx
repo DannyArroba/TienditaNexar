@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { productsApi } from '../api';
-import { Search, Filter, ShoppingCart, Loader2, Package, Check, Plus, Minus, ArrowRight, XCircle } from 'lucide-react';
+import { Search, Filter, ShoppingCart, Loader2, Package, Check, Plus, Minus, ArrowRight, XCircle, Barcode } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -106,7 +106,7 @@ const ProductCard = ({ product, addToCart, getItemCountInCart }) => {
             ) : (
               <>
                 <ShoppingCart className="h-3.5 w-3.5" />
-                Añadir a venta
+                Agregar al carrito
               </>
             )}
           </button>
@@ -124,10 +124,78 @@ const Sales = () => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('todas');
 
+  useEffect(() => {
+    let barcodeBuffer = '';
+    let lastKeyTime = Date.now();
+
+    const processBarcode = async (code) => {
+      const normalizedCode = code.trim();
+      const product = products.find((item) => String(item.barcode || '').trim() === normalizedCode);
+
+      if (!product) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'warning',
+          title: `Codigo no encontrado: ${normalizedCode}`,
+          showConfirmButton: false,
+          timer: 2000
+        });
+        return;
+      }
+
+      if (parseInt(product.stock) <= 0) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: 'Sin stock disponible',
+          showConfirmButton: false,
+          timer: 2000
+        });
+        return;
+      }
+
+      await addToCart(product, 1);
+    };
+
+    const handleKeyDown = (event) => {
+      const target = event.target;
+      const isTypingField =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable;
+
+      if (isTypingField || event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+      }
+
+      const currentTime = Date.now();
+      if (currentTime - lastKeyTime > 100) {
+        barcodeBuffer = '';
+      }
+
+      if (event.key === 'Enter') {
+        if (barcodeBuffer.length > 3) {
+          processBarcode(barcodeBuffer);
+        }
+        barcodeBuffer = '';
+      } else if (event.key.length === 1) {
+        barcodeBuffer += event.key;
+      }
+
+      lastKeyTime = currentTime;
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [products, addToCart]);
+
   const handleCancelSale = async () => {
     const result = await Swal.fire({
-      title: '¿Cancelar venta?',
-      text: "Se borrarán todos los productos de la venta actual",
+      title: '¿Vaciar carrito?',
+      text: "Se quitarán todos los productos seleccionados",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -142,7 +210,7 @@ const Sales = () => {
         toast: true,
         position: 'top-end',
         icon: 'info',
-        title: 'Venta cancelada',
+        title: 'Carrito vaciado',
         showConfirmButton: false,
         timer: 2000
       });
@@ -184,8 +252,14 @@ const Sales = () => {
     <div className="max-w-7xl mx-auto px-4 py-6 pb-24">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Punto de Venta</h1>
-          <p className="text-sm text-gray-500 font-medium">Selecciona los productos para la venta actual</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Productos</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-gray-500 font-medium">Selecciona productos y agrégalos al carrito</p>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-50 text-green-600 rounded-full border border-green-100">
+              <Barcode className="h-3 w-3" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Escaner activo</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -267,7 +341,7 @@ const Sales = () => {
                 <button
                   onClick={handleCancelSale}
                   className="bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-2xl font-black transition-all active:scale-95 flex items-center gap-2 shadow-xl shadow-red-900/20"
-                  title="Cancelar Venta Actual"
+                  title="Vaciar carrito"
                 >
                   <XCircle className="h-6 w-6" />
                   <span className="hidden sm:inline text-xs uppercase tracking-widest">Cancelar</span>

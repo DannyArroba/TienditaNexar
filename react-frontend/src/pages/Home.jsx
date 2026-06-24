@@ -58,8 +58,8 @@ const Home = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative z-10 text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-tight"
         >
-          Supermercado <br />
-          <span className="bg-gradient-to-r from-primary-400 to-green-400 bg-clip-text text-transparent drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)]">3 Hermanos</span>
+          Local Comercial <br />
+          <span className="bg-gradient-to-r from-primary-400 to-green-400 bg-clip-text text-transparent drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)]">Tres Hermanos</span>
         </motion.h1>
 
         <motion.p 
@@ -125,7 +125,7 @@ const Home = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-3">Módulos Inteligentes</h2>
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-3">Módulos</h2>
             <p className="text-base text-gray-500 font-medium">Todo lo que necesitas para una administración moderna</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -182,8 +182,8 @@ const Home = () => {
             <div className="flex items-center gap-3">
               <div className="bg-primary-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(22,163,74,0.2)]">3</div>
               <div>
-                <span className="text-white font-black text-xl uppercase tracking-tighter block leading-none">Hermanos</span>
-                <span className="text-gray-500 text-[8px] font-black uppercase tracking-[0.3em]">Supermercado</span>
+                <span className="text-gray-400 text-[8px] font-black uppercase tracking-[0.2em] block leading-none">Local Comercial</span>
+                <span className="text-white font-black text-xl uppercase tracking-tighter block leading-none mt-1">Tres Hermanos</span>
               </div>
             </div>
 
@@ -198,7 +198,7 @@ const Home = () => {
                 © 2026 | Sistema Interno
               </p>
               <span className="text-[8px] font-bold text-gray-600 uppercase">
-                Powered by TienditaNexar
+                Cristhian & Nexar
               </span>
             </div>
           </div>

@@ -15,7 +15,7 @@ const Support = () => {
     {
       icon: <Mail className="h-6 w-6" />,
       title: "Correo Electrónico",
-      value: "soporte@tienditanexar.com",
+      value: "soporte3hermanos@gmail.com",
       desc: "Respuesta en menos de 24 horas",
       color: "bg-primary-600"
     },
@@ -29,7 +29,7 @@ const Support = () => {
     {
       icon: <Globe className="h-6 w-6" />,
       title: "Redes Sociales",
-      value: "@TienditaNexar",
+      value: "@3Hermanos",
       desc: "Síguenos para actualizaciones",
       color: "bg-purple-600"
     }
@@ -111,7 +111,7 @@ const Support = () => {
       {/* Footer Branding */}
       <div className="mt-auto py-12 text-center">
         <p className="text-gray-400 text-xs font-black uppercase tracking-[0.2em]">
-          Desarrollado con ❤️ por <span className="text-gray-900">TienditaNexar Team</span>
+          Desarrollado con ❤️ por <span className="text-gray-900">Cristhian & Nexar</span>
         </p>
       </div>
     </div>

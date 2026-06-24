@@ -8,7 +8,7 @@ const Terms = () => {
     {
       icon: <ShieldCheck className="h-6 w-6" />,
       title: "Uso del Sistema",
-      content: "Este software está diseñado exclusivamente para la gestión interna de Supermercado 3 Hermanos. El acceso está restringido a personal autorizado."
+      content: "Este software está diseñado exclusivamente para la gestión interna del Local Comercial Tres Hermanos. El acceso está restringido a personal autorizado."
     },
     {
       icon: <FileText className="h-6 w-6" />,
@@ -72,7 +72,7 @@ const Terms = () => {
         {/* Note */}
         <div className="mt-20 p-8 bg-primary-600 rounded-[2.5rem] text-white shadow-2xl shadow-primary-200">
           <p className="text-center font-bold text-sm uppercase tracking-widest">
-            Última actualización: Mayo 2026 | Supermercado 3 Hermanos & TienditaNexar
+            Última actualización: Mayo 2026 | Local Comercial Tres Hermanos
           </p>
         </div>
       </div>
@@ -80,7 +80,7 @@ const Terms = () => {
       {/* Footer */}
       <div className="mt-auto py-12 text-center border-t border-gray-100 bg-white">
         <p className="text-gray-400 text-xs font-black uppercase tracking-[0.2em]">
-          © 2026 TienditaNexar | Todos los derechos reservados
+          © 2026 Cristhian & Nexar | Todos los derechos reservados
         </p>
       </div>
     </div>

@@ -56,7 +56,7 @@ const Transactions = () => {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(22, 163, 74); // primary-600
-    doc.text('SUPERMERCADO 3 HERMANOS', 105, 20, { align: 'center' });
+    doc.text('LOCAL COMERCIAL TRES HERMANOS', 105, 20, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -68,7 +68,7 @@ const Transactions = () => {
     // Purchase Info
     doc.setFontSize(12);
     doc.setTextColor(0);
-    doc.text(`${purchase.purchase_type === 'FACTURA' ? 'FACTURA INTERNA' : 'NOTA DE VENTA'}`, 20, 45);
+    doc.text(`${purchase.purchase_type === 'FACTURA' ? 'COMPROBANTE DE VENTA' : 'NOTA DE VENTA'}`, 20, 45);
     doc.setFontSize(10);
     doc.text(`Nro. Comprobante: #000${purchase.id}`, 20, 52);
     doc.text(`Fecha: ${date}`, 20, 57);
@@ -127,7 +127,9 @@ const Transactions = () => {
 
   const filteredTransactions = transactions.filter(t => 
     t.id.toString().includes(search) || 
-    t.purchase_type.toLowerCase().includes(search.toLowerCase())
+    t.purchase_type.toLowerCase().includes(search.toLowerCase()) ||
+    (t.display_customer_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (t.customer_idnumber || '').includes(search)
   );
 
   return (
@@ -163,6 +165,7 @@ const Transactions = () => {
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha y Hora</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tipo</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cliente</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
                 </tr>
@@ -185,8 +188,16 @@ const Transactions = () => {
                           ? 'bg-blue-50 text-blue-600' 
                           : 'bg-green-50 text-green-600'
                       }`}>
-                        {t.purchase_type.replace('_', ' ')}
+                        {t.purchase_type === 'FACTURA' ? 'Comprobante de venta' : 'Nota de venta'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-xs font-bold text-gray-800">
+                        {t.display_customer_name || 'Consumidor final'}
+                      </p>
+                      {t.customer_idnumber && (
+                        <p className="text-[10px] text-gray-400">CI {t.customer_idnumber}</p>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-black text-gray-900 text-base tracking-tighter">${parseFloat(t.total).toFixed(2)}</span>
@@ -260,7 +271,9 @@ const Transactions = () => {
                           <CreditCard className="h-3 w-3" />
                           <span className="text-[8px] font-black uppercase tracking-widest">Tipo</span>
                         </div>
-                        <p className="text-xs font-black text-gray-900">{details.purchase.purchase_type.replace('_', ' ')}</p>
+                        <p className="text-xs font-black text-gray-900">
+                          {details.purchase.purchase_type === 'FACTURA' ? 'Comprobante de venta' : 'Nota de venta'}
+                        </p>
                       </div>
                       <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100">
                         <div className="flex items-center gap-2 text-primary-400 mb-1">

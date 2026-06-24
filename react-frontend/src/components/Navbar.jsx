@@ -25,12 +25,10 @@ const Navbar = () => {
             <Link to="/" className="group flex items-center gap-2">
               <div className="bg-primary-600 text-white w-8 h-8 rounded-lg flex items-center justify-center font-black text-lg shadow-lg shadow-primary-200 group-hover:rotate-6 transition-transform">3</div>
               <div className="flex flex-col">
-                <span className="text-lg font-black text-gray-900 uppercase tracking-tighter leading-none">Hermanos</span>
-                {!user && (
-                  <span className="text-[7px] font-black text-primary-600 uppercase tracking-[0.1em] mt-1 hidden sm:block">
-                    Gestión de Próxima Generación
-                  </span>
-                )}
+                <span className="text-[8px] font-black text-primary-600 uppercase leading-none">Local Comercial</span>
+                <span className="text-sm font-black text-gray-900 uppercase leading-none mt-1">
+                  Tres Hermanos
+                </span>
               </div>
             </Link>
 
@@ -52,8 +50,9 @@ const Navbar = () => {
               <>
                 <div className="hidden md:flex items-center gap-6">
                   <Link to="/dashboard" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Dashboard</Link>
-                  <Link to="/sales" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Vender</Link>
+                  <Link to="/sales" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Productos</Link>
                   <Link to="/inventory" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Inventario</Link>
+                  <Link to="/customers" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Clientes</Link>
                   <Link to="/transactions" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Transacciones</Link>
                   {user.role === 'admin' && (
                     <Link to="/users" className="text-xs font-black text-gray-500 hover:text-primary-600 transition-all uppercase tracking-widest">Personal</Link>

@@ -217,7 +217,7 @@ const Users = () => {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Rol en el Sistema</label>
                 <select name="role" defaultValue={editingUser?.role || 'trabajador'} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none transition-all appearance-none cursor-pointer">
-                  <option value="trabajador">Trabajador (Ventas e Inventario)</option>
+                  <option value="trabajador">Trabajador (Productos e Inventario)</option>
                   <option value="admin">Administrador (Control Total)</option>
                 </select>
               </div>
